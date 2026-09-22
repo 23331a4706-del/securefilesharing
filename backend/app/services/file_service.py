@@ -111,22 +111,9 @@ def process_file_upload(file_storage, owner_id: int):
             ))
             file_id = cursor.lastrowid
 
-        # 2. Blockchain Registration (Phase 6)
+        # 2. Blockchain Status: Pending explicit user confirmation via MetaMask wallet
         blockchain_recorded = False
         blockchain_tx_hash = None
-        try:
-            bc_result = register_file_metadata(file_id, str(owner_id), ipfs_cid, sha256_hash)
-            if bc_result.get("success"):
-                blockchain_recorded = True
-                blockchain_tx_hash = bc_result.get("transaction_hash")
-                with conn.cursor() as cursor:
-                    cursor.execute("""
-                        UPDATE files 
-                        SET blockchain_recorded = 1, blockchain_tx_hash = %s, status = 'blockchain_recorded'
-                        WHERE id = %s
-                    """, (blockchain_tx_hash, file_id))
-        except Exception as e:
-            logger.warning(f"Automatic blockchain registration pending for file ID {file_id}: {e}")
 
         return {
             "id": file_id,
@@ -136,9 +123,9 @@ def process_file_upload(file_storage, owner_id: int):
             "encryption_algorithm": "AES-256-GCM",
             "sha256_hash": sha256_hash,
             "ipfs_cid": ipfs_cid,
-            "blockchain_recorded": blockchain_recorded,
-            "blockchain_tx_hash": blockchain_tx_hash,
-            "status": "blockchain_recorded" if blockchain_recorded else "ipfs_stored"
+            "blockchain_recorded": False,
+            "blockchain_tx_hash": None,
+            "status": "ipfs_stored"
         }
     finally:
         conn.close()
@@ -158,23 +145,6 @@ def get_user_files(owner_id: int):
             cursor.execute(sql, (owner_id,))
             rows = cursor.fetchall()
             for r in rows:
-                if not r.get("blockchain_recorded"):
-                    try:
-                        bc_res = register_file_metadata(r["id"], str(owner_id), r.get("ipfs_cid", ""), r.get("sha256_hash", ""))
-                        if bc_res.get("success"):
-                            tx_h = bc_res.get("transaction_hash")
-                            r["blockchain_recorded"] = True
-                            r["blockchain_tx_hash"] = tx_h
-                            r["status"] = "blockchain_recorded"
-                            with conn.cursor() as update_cursor:
-                                update_cursor.execute("""
-                                    UPDATE files
-                                    SET blockchain_recorded = 1, blockchain_tx_hash = %s, status = 'blockchain_recorded'
-                                    WHERE id = %s
-                                """, (tx_h, r["id"]))
-                    except Exception as err:
-                        logger.warning(f"Auto-heal blockchain registration failed for file {r['id']}: {err}")
-
                 if "blockchain_recorded" in r:
                     r["blockchain_recorded"] = bool(r["blockchain_recorded"])
             return rows

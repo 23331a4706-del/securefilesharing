@@ -338,14 +338,16 @@ export default function Dashboard() {
   const triggerMetaMaskTransaction = async (fileInfo) => {
     if (!window.ethereum) {
       console.log("MetaMask Web3 extension not installed in browser.");
-      return null;
+      return { success: false, rejected: false, message: "MetaMask extension unavailable or locked." };
     }
 
     try {
       // 1. Request connected account to ensure MetaMask popup window triggers
       const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
       const fromAddr = (accounts && accounts.length > 0) ? accounts[0] : user?.wallet_address;
-      if (!fromAddr) return null;
+      if (!fromAddr) {
+        return { success: false, rejected: false, message: "No connected MetaMask wallet address found." };
+      }
 
       // Auto-link active wallet address if different
       if (fromAddr && fromAddr !== user?.wallet_address) {
@@ -373,7 +375,6 @@ export default function Dashboard() {
         transactionHistory: txHistoryStr
       };
       const payloadString = JSON.stringify(payloadObj, null, 2);
-      const memoHex = "0x" + Array.from(new TextEncoder().encode(payloadString)).map(b => b.toString(16).padStart(2, '0')).join('');
 
       let resultHash = null;
       let activityType = "Signature Request / Contract Interaction";
@@ -439,6 +440,9 @@ export default function Dashboard() {
         activityType = "Signature Request (EIP-712)";
         console.log("✓ MetaMask EIP-712 Signature Confirmed & Recorded:", resultHash);
       } catch (typedErr) {
+        if (typedErr.code === 4001 || (typedErr.message && typedErr.message.toLowerCase().includes("rejected"))) {
+          throw typedErr;
+        }
         console.warn("eth_signTypedData_v4 fallback to personal_sign:", typedErr);
         const signMsgHex = "0x" + Array.from(new TextEncoder().encode(`Confirm & Sign SHA-256 File Registration:\n${payloadString}`)).map(b => b.toString(16).padStart(2, '0')).join('');
         resultHash = await window.ethereum.request({
@@ -450,6 +454,13 @@ export default function Dashboard() {
       }
 
       if (resultHash) {
+        const fileIdVal = payloadObj.fileId;
+        try {
+          await retryBlockchainRegistration(fileIdVal, token, resultHash);
+        } catch (postErr) {
+          console.warn("Backend blockchain registration update warning:", postErr);
+        }
+
         const newLog = {
           id: Date.now(),
           type: activityType,
@@ -465,12 +476,30 @@ export default function Dashboard() {
           signatureHash: resultHash
         };
         setActivityLogs(prev => [newLog, ...prev]);
+
+        return { success: true, txHash: resultHash };
       }
 
-      return resultHash;
+      return { success: false, rejected: false, message: "Transaction submission failed." };
     } catch (err) {
-      console.warn("MetaMask real-time confirmation popup dismissed or closed:", err);
-      return null;
+      console.warn("MetaMask transaction confirmation rejected or cancelled:", err);
+      const isRejection = err.code === 4001 || (err.message && err.message.toLowerCase().includes("user rejected")) || (err.message && err.message.toLowerCase().includes("rejected"));
+      const newLog = {
+        id: Date.now(),
+        type: "Signature Request (MetaMask)",
+        status: "Rejected ✗",
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+        account: user?.wallet_address || "Connected Account",
+        filename: fileInfo?.original_filename || "secure_file",
+        payloadString: err.message || "User rejected transaction in MetaMask."
+      };
+      setActivityLogs(prev => [newLog, ...prev]);
+
+      return {
+        success: false,
+        rejected: isRejection,
+        message: "Transaction rejected by user. Blockchain record was not created."
+      };
     }
   };
 
@@ -562,21 +591,23 @@ export default function Dashboard() {
     setIsUploading(true);
 
     try {
-      // 1. Perform AES-256-GCM encryption, IPFS storage, and backend blockchain registration
+      // 1. Perform AES-256-GCM encryption and IPFS storage
       const res = await uploadFile(selectedFile, token);
       if (res.success && res.file) {
-        // 2. Trigger MetaMask real-time popup window with full file metadata payload (including unique IPFS CID)
-        let metaMaskTxHash = null;
+        // 2. Open MetaMask popup window for user confirmation
         if (window.ethereum) {
-          try {
-            metaMaskTxHash = await triggerMetaMaskTransaction(res.file);
-          } catch (metaErr) {
-            console.warn("MetaMask real-time prompt notice:", metaErr);
+          const metaRes = await triggerMetaMaskTransaction(res.file);
+          if (metaRes && metaRes.success) {
+            setSuccessMsg(`✓ Encrypted with AES-256-GCM. ✓ Stored on IPFS. ✓ Blockchain record created successfully via MetaMask confirmation (Txn: ${metaRes.txHash.slice(0, 10)}...).`);
+          } else if (metaRes && metaRes.rejected) {
+            setErrorMsg(metaRes.message || "Transaction rejected by user. Blockchain record was not created.");
+          } else {
+            setSuccessMsg(`✓ Encrypted with AES-256-GCM. ✓ Stored on IPFS.`);
           }
+        } else {
+          setSuccessMsg(res.message || `✓ Encrypted with AES-256-GCM. ✓ Stored on IPFS.`);
         }
 
-        const extraTxMsg = metaMaskTxHash ? ` (MetaMask Txn Confirmed: ${metaMaskTxHash.slice(0, 10)}...)` : '';
-        setSuccessMsg(res.message || `✓ Encrypted with AES-256-GCM. ✓ Stored on IPFS. ✓ Registered on Blockchain${extraTxMsg}.`);
         setSelectedFile(null);
         if (fileInputRef.current) {
           fileInputRef.current.value = '';
@@ -648,12 +679,31 @@ export default function Dashboard() {
     setErrorMsg('');
     setRetryingFileId(fileId);
     try {
-      const res = await retryBlockchainRegistration(fileId, token);
-      if (res.success) {
-        setSuccessMsg(`✓ File metadata successfully recorded on blockchain.`);
-        await fetchFiles();
+      const fileObj = files.find(f => f.id === fileId) || { id: fileId };
+      if (window.ethereum) {
+        const metaRes = await triggerMetaMaskTransaction(fileObj);
+        if (metaRes && metaRes.success) {
+          setSuccessMsg(`✓ File metadata successfully recorded on blockchain via MetaMask confirmation.`);
+          await fetchFiles();
+        } else if (metaRes && metaRes.rejected) {
+          setErrorMsg(metaRes.message || "Transaction rejected by user. Blockchain record was not created.");
+        } else {
+          const res = await retryBlockchainRegistration(fileId, token);
+          if (res.success) {
+            setSuccessMsg(`✓ File metadata successfully recorded on blockchain.`);
+            await fetchFiles();
+          } else {
+            setErrorMsg(res.message || 'Blockchain registration failed.');
+          }
+        }
       } else {
-        setErrorMsg(res.message || 'Blockchain registration failed.');
+        const res = await retryBlockchainRegistration(fileId, token);
+        if (res.success) {
+          setSuccessMsg(`✓ File metadata successfully recorded on blockchain.`);
+          await fetchFiles();
+        } else {
+          setErrorMsg(res.message || 'Blockchain registration failed.');
+        }
       }
     } catch (err) {
       setErrorMsg(`Retry failed: ${err.message}`);

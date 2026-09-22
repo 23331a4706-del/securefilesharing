@@ -172,6 +172,26 @@ def retry_blockchain(file_id: int):
         if file_rec["owner_id"] != user_id:
             return jsonify({"success": False, "message": "Unauthorized"}), 403
 
+        req_data = request.get_json(silent=True) or {}
+        passed_tx_hash = req_data.get("tx_hash") or req_data.get("signature_hash")
+
+        if passed_tx_hash:
+            conn = get_db_connection()
+            try:
+                with conn.cursor() as cursor:
+                    cursor.execute(
+                        "UPDATE files SET blockchain_recorded = 1, blockchain_tx_hash = %s, status = 'blockchain_recorded' WHERE id = %s",
+                        (passed_tx_hash, file_id)
+                    )
+            finally:
+                conn.close()
+
+            return jsonify({
+                "success": True,
+                "message": "File metadata registered on blockchain successfully",
+                "tx_hash": passed_tx_hash
+            }), 200
+
         result = register_file_metadata(
             file_id=file_id,
             owner_id=str(user_id),

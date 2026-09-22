@@ -175,12 +175,14 @@ export async function verifyFileIntegrity(fileId, token) {
 /**
  * Phase 6 — Retry pending/failed blockchain registration.
  */
-export async function retryBlockchainRegistration(fileId, token) {
+export async function retryBlockchainRegistration(fileId, token, txHash = null) {
   return request(`/files/${fileId}/blockchain/register`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
     },
+    body: JSON.stringify({ tx_hash: txHash }),
   });
 }
 
