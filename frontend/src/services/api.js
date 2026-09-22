@@ -1,6 +1,6 @@
-// Frontend API Service Layer
-
-const API_BASE = '/api';
+const API_BASE = (import.meta.env.VITE_API_URL && import.meta.env.VITE_API_URL.trim() !== '')
+  ? `${import.meta.env.VITE_API_URL.replace(/\/$/, '')}/api`
+  : (import.meta.env.MODE === 'production' ? 'https://securefilesharing-1.onrender.com/api' : '/api');
 
 /**
  * Helper to execute API requests with proper headers and error handling.
