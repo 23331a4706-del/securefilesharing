@@ -264,12 +264,39 @@ export default function Dashboard() {
     }
   };
 
+  // Parallel fetch for initial dashboard load to eliminate page load / refresh latency
+  const fetchDashboardData = async () => {
+    setLoadingFiles(true);
+    try {
+      const [filesRes, sharedRes, sharedByMeRes, shareableRes] = await Promise.allSettled([
+        getUserFiles(token),
+        getSharedWithMe(token),
+        getSharedByMe(token),
+        getShareableUsers(token)
+      ]);
+
+      if (filesRes.status === 'fulfilled' && filesRes.value?.success) {
+        setFiles(filesRes.value.files || []);
+      }
+      if (sharedRes.status === 'fulfilled' && sharedRes.value?.success) {
+        setSharedFiles(sharedRes.value.files || []);
+      }
+      if (sharedByMeRes.status === 'fulfilled' && sharedByMeRes.value?.success) {
+        setSharedByMeList(sharedByMeRes.value.shares || []);
+      }
+      if (shareableRes.status === 'fulfilled' && shareableRes.value?.success) {
+        setShareableUsers(shareableRes.value.users || []);
+      }
+    } catch (err) {
+      console.error("Dashboard parallel fetch error:", err);
+    } finally {
+      setLoadingFiles(false);
+    }
+  };
+
   useEffect(() => {
     if (token) {
-      fetchFiles();
-      fetchSharedFiles();
-      fetchSharedByMe();
-      fetchShareableUsers();
+      fetchDashboardData();
     }
 
     // Real-time listener for MetaMask account switching inside extension

@@ -48,6 +48,12 @@ class SQLiteConnectionWrapper:
     def cursor(self):
         return SQLiteDictCursor(self.conn.cursor())
 
+    def commit(self):
+        try:
+            self.conn.commit()
+        except Exception:
+            pass
+
     def close(self):
         try:
             self.conn.commit()
@@ -84,7 +90,7 @@ def get_db_connection():
 
 
 def _get_sqlite_connection():
-    db_path = os.getenv("SQLITE_DB_PATH", "secure_file_sharing.db")
+    db_path = os.getenv("SQLITE_DB_PATH", os.path.abspath(os.path.join(Config.BASE_DIR, "..", "secure_file_sharing.db")))
     conn = sqlite3.connect(db_path, timeout=10.0)
     conn.isolation_level = None  # Autocommit mode
     conn.execute("""
