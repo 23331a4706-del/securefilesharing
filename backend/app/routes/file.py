@@ -1,5 +1,6 @@
 import io
 from flask import Blueprint, request, jsonify, send_file
+from app.db import get_db_connection
 from app.routes.auth import decode_jwt_token
 from app.services.file_service import (
     process_file_upload,

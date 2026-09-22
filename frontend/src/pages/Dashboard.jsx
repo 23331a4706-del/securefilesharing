@@ -1193,9 +1193,20 @@ export default function Dashboard() {
                                   Recorded
                                 </span>
                               ) : (
-                                <span className="badge badge-pending" style={{ fontSize: '0.7rem' }}>
-                                  Pending
-                                </span>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', alignItems: 'flex-start' }}>
+                                  <span className="badge badge-pending" style={{ fontSize: '0.7rem' }}>
+                                    Pending
+                                  </span>
+                                  <button
+                                    onClick={() => handleRetryBlockchain(file.id)}
+                                    disabled={retryingFileId === file.id}
+                                    className="btn btn-secondary"
+                                    style={{ padding: '0.2rem 0.45rem', fontSize: '0.7rem', color: 'var(--accent-cyan)', border: '1px solid var(--accent-cyan)', cursor: 'pointer' }}
+                                    title="Click to open MetaMask and confirm blockchain recording"
+                                  >
+                                    {retryingFileId === file.id ? 'Confirming...' : '🦊 Register'}
+                                  </button>
+                                </div>
                               )}
                             </td>
                             <td style={{ padding: '0.85rem 0.5rem', textAlign: 'right' }}>
