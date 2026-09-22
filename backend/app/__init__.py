@@ -20,16 +20,9 @@ def create_app():
     except Exception as e:
         logger.warning(f"Security config audit notice: {e}")
 
-    # Strict CORS configuration matching local and network origins
-    allowed_origins = [
-        Config.FRONTEND_ORIGIN,
-        "http://127.0.0.1:5173",
-        "http://localhost:5173",
-        "http://127.0.0.1:3000",
-        "http://localhost:3000"
-    ]
+    # Production CORS configuration supporting local development and live Vercel deployments
     CORS(app, resources={r"/api/*": {
-        "origins": allowed_origins,
+        "origins": "*",
         "methods": ["GET", "POST", "DELETE", "OPTIONS"],
         "allow_headers": ["Authorization", "Content-Type"]
     }})
@@ -46,7 +39,7 @@ def create_app():
         response.headers['X-Content-Type-Options'] = 'nosniff'
         response.headers['X-Frame-Options'] = 'DENY'
         response.headers['Referrer-Policy'] = 'no-referrer'
-        response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' http://localhost:* http://127.0.0.1:*"
+        response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' http://localhost:* http://127.0.0.1:* https://*.onrender.com https://*.vercel.app"
         response.headers['Permissions-Policy'] = 'camera=(), microphone=(), geolocation=()'
         
         if request.path.startswith('/api/'):
