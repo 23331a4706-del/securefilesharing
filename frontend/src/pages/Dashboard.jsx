@@ -149,12 +149,34 @@ const handleManualDecryptAndDownload = async () => {
 export default function Dashboard() {
   const { user, token, updateUser } = useAuth();
   const [activeTab, setActiveTab] = useState('myFiles'); // 'myFiles' | 'sharedWithMe' | 'sharedByMe'
-  const [files, setFiles] = useState([]);
-  const [sharedFiles, setSharedFiles] = useState([]);
+  
+  // Stale-While-Revalidate caching for 0ms instant refresh on live links
+  const [files, setFiles] = useState(() => {
+    try {
+      const cached = localStorage.getItem('cached_my_files');
+      return cached ? JSON.parse(cached) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+  const [sharedFiles, setSharedFiles] = useState(() => {
+    try {
+      const cached = localStorage.getItem('cached_shared_files');
+      return cached ? JSON.parse(cached) : [];
+    } catch (e) {
+      return [];
+    }
+  });
   const [sharedByMeList, setSharedByMeList] = useState([]);
   const [shareableUsers, setShareableUsers] = useState([]);
   
-  const [loadingFiles, setLoadingFiles] = useState(true);
+  const [loadingFiles, setLoadingFiles] = useState(() => {
+    try {
+      return !localStorage.getItem('cached_my_files');
+    } catch (e) {
+      return true;
+    }
+  });
   const [loadingShared, setLoadingShared] = useState(false);
   const [loadingSharedByMe, setLoadingSharedByMe] = useState(false);
 
@@ -209,11 +231,12 @@ export default function Dashboard() {
 
   // Load user files
   const fetchFiles = async () => {
-    setLoadingFiles(true);
     try {
       const res = await getUserFiles(token);
       if (res.success) {
-        setFiles(res.files || []);
+        const fetchedFiles = res.files || [];
+        setFiles(fetchedFiles);
+        try { localStorage.setItem('cached_my_files', JSON.stringify(fetchedFiles)); } catch (e) {}
       }
     } catch (err) {
       console.error("Failed to load user files:", err);
@@ -224,11 +247,12 @@ export default function Dashboard() {
 
   // Load shared files (Shared With Me)
   const fetchSharedFiles = async () => {
-    setLoadingShared(true);
     try {
       const res = await getSharedWithMe(token);
       if (res.success) {
-        setSharedFiles(res.files || []);
+        const fetchedShared = res.files || [];
+        setSharedFiles(fetchedShared);
+        try { localStorage.setItem('cached_shared_files', JSON.stringify(fetchedShared)); } catch (e) {}
       }
     } catch (err) {
       console.error("Failed to load shared files:", err);
@@ -266,7 +290,6 @@ export default function Dashboard() {
 
   // Parallel fetch for initial dashboard load to eliminate page load / refresh latency
   const fetchDashboardData = async () => {
-    setLoadingFiles(true);
     try {
       const [filesRes, sharedRes, sharedByMeRes, shareableRes] = await Promise.allSettled([
         getUserFiles(token),
@@ -276,10 +299,14 @@ export default function Dashboard() {
       ]);
 
       if (filesRes.status === 'fulfilled' && filesRes.value?.success) {
-        setFiles(filesRes.value.files || []);
+        const fetchedFiles = filesRes.value.files || [];
+        setFiles(fetchedFiles);
+        try { localStorage.setItem('cached_my_files', JSON.stringify(fetchedFiles)); } catch (e) {}
       }
       if (sharedRes.status === 'fulfilled' && sharedRes.value?.success) {
-        setSharedFiles(sharedRes.value.files || []);
+        const fetchedShared = sharedRes.value.files || [];
+        setSharedFiles(fetchedShared);
+        try { localStorage.setItem('cached_shared_files', JSON.stringify(fetchedShared)); } catch (e) {}
       }
       if (sharedByMeRes.status === 'fulfilled' && sharedByMeRes.value?.success) {
         setSharedByMeList(sharedByMeRes.value.shares || []);
