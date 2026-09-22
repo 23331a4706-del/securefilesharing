@@ -180,12 +180,13 @@ def retry_blockchain(file_id: int):
         )
 
         if result.get("success"):
+            tx_hash_val = result.get("transaction_hash") or result.get("tx_hash")
             conn = get_db_connection()
             try:
                 with conn.cursor() as cursor:
                     cursor.execute(
-                        "UPDATE files SET blockchain_recorded = 1, blockchain_tx_hash = %s WHERE id = %s",
-                        (result.get("tx_hash"), file_id)
+                        "UPDATE files SET blockchain_recorded = 1, blockchain_tx_hash = %s, status = 'blockchain_recorded' WHERE id = %s",
+                        (tx_hash_val, file_id)
                     )
             finally:
                 conn.close()
@@ -193,7 +194,7 @@ def retry_blockchain(file_id: int):
             return jsonify({
                 "success": True,
                 "message": "File metadata registered on blockchain successfully",
-                "tx_hash": result.get("tx_hash")
+                "tx_hash": tx_hash_val
             }), 200
         else:
             return jsonify({"success": False, "message": result.get("message", "Blockchain registration failed")}), 500

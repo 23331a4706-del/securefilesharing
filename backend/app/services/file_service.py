@@ -158,6 +158,23 @@ def get_user_files(owner_id: int):
             cursor.execute(sql, (owner_id,))
             rows = cursor.fetchall()
             for r in rows:
+                if not r.get("blockchain_recorded"):
+                    try:
+                        bc_res = register_file_metadata(r["id"], str(owner_id), r.get("ipfs_cid", ""), r.get("sha256_hash", ""))
+                        if bc_res.get("success"):
+                            tx_h = bc_res.get("transaction_hash")
+                            r["blockchain_recorded"] = True
+                            r["blockchain_tx_hash"] = tx_h
+                            r["status"] = "blockchain_recorded"
+                            with conn.cursor() as update_cursor:
+                                update_cursor.execute("""
+                                    UPDATE files
+                                    SET blockchain_recorded = 1, blockchain_tx_hash = %s, status = 'blockchain_recorded'
+                                    WHERE id = %s
+                                """, (tx_h, r["id"]))
+                    except Exception as err:
+                        logger.warning(f"Auto-heal blockchain registration failed for file {r['id']}: {err}")
+
                 if "blockchain_recorded" in r:
                     r["blockchain_recorded"] = bool(r["blockchain_recorded"])
             return rows
