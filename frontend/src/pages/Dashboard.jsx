@@ -481,8 +481,14 @@ export default function Dashboard() {
     try {
       let detectedAddress = '';
 
-      // 1. Connect using standard Web3 eth_requestAccounts (Clean popup, no phishing warning)
-      if (window.ethereum) {
+      // Ask user how they want to connect/link their wallet address:
+      // Option A: Auto-detect active browser MetaMask account
+      // Option B: Manually enter/paste any custom wallet address (e.g. friend's address)
+      const useAutoExtension = window.confirm(
+        "Link Web3 Wallet Address Options:\n\n• Click OK to auto-detect active MetaMask extension account.\n• Click CANCEL to manually enter/paste any custom Web3 wallet address (e.g. friend's address)."
+      );
+
+      if (useAutoExtension && window.ethereum) {
         try {
           const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
           if (accounts && accounts[0]) {
@@ -493,10 +499,10 @@ export default function Dashboard() {
         }
       }
 
-      // 2. If extension didn't return an address or user cancelled, prompt user to enter/paste a custom wallet address
+      // If user selected Cancel, or extension returned no address, prompt for custom address
       if (!detectedAddress) {
         const inputAddress = window.prompt(
-          "Enter or paste your Web3 Wallet Address (e.g. 0x...):",
+          "Enter or paste any Web3 Wallet Address (e.g. 0x... or friend's address):",
           user?.wallet_address || ""
         );
 
@@ -516,7 +522,7 @@ export default function Dashboard() {
       const res = await connectWalletAddress(detectedAddress, token);
       if (res.success) {
         updateUser({ wallet_address: detectedAddress });
-        setSuccessMsg(`✓ Dynamic MetaMask wallet linked: ${detectedAddress}. Click the address to open the MetaMask platform!`);
+        setSuccessMsg(`✓ Dynamic Web3 wallet address updated & linked: ${detectedAddress}`);
       } else {
         setErrorMsg(res.message || 'Failed to link wallet address.');
       }
