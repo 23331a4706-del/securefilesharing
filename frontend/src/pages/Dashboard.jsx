@@ -329,19 +329,7 @@ export default function Dashboard() {
       return;
     }
 
-    // 1. Trigger MetaMask Web3 Provider Permissions / Wallet interface if available
-    if (window.ethereum) {
-      try {
-        window.ethereum.request({
-          method: 'wallet_requestPermissions',
-          params: [{ eth_accounts: {} }]
-        }).catch(() => {});
-      } catch (err) {
-        console.warn("MetaMask window open notice:", err);
-      }
-    }
-
-    // 2. Open Etherscan block explorer / MetaMask platform page dynamically in a new tab
+    // Open Etherscan block explorer / MetaMask platform page dynamically in a new tab
     const explorerUrl = `https://etherscan.io/address/${address}`;
     window.open(explorerUrl, '_blank', 'noopener,noreferrer');
   };
@@ -493,26 +481,22 @@ export default function Dashboard() {
     try {
       let detectedAddress = '';
 
-      // 1. Force MetaMask to open its Account Picker window to select another account in the wallet
+      // 1. Connect using standard Web3 eth_requestAccounts (Clean popup, no phishing warning)
       if (window.ethereum) {
         try {
-          await window.ethereum.request({
-            method: 'wallet_requestPermissions',
-            params: [{ eth_accounts: {} }]
-          });
-          const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+          const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
           if (accounts && accounts[0]) {
             detectedAddress = accounts[0];
           }
         } catch (e) {
-          console.warn("MetaMask account switch cancelled or dismissed:", e);
+          console.warn("MetaMask connection notice:", e);
         }
       }
 
       // 2. If extension didn't return an address or user cancelled, prompt user to enter/paste a custom wallet address
       if (!detectedAddress) {
         const inputAddress = window.prompt(
-          "Enter or paste a new Web3 Wallet Address (e.g. 0x...):",
+          "Enter or paste your Web3 Wallet Address (e.g. 0x...):",
           user?.wallet_address || ""
         );
 
