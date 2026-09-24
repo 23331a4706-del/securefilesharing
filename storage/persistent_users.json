@@ -1,0 +1,20 @@
+[
+  {
+    "id": 1,
+    "username": "alice_p9",
+    "email": "alice_p9@example.com",
+    "password_hash": "$2b$12$h9Vo/F/.QfOy04TO96CbS.u1qVoGEu8kHgz85GvBUhxUpqG7xpNfG",
+    "wallet_address": null,
+    "ecc_public_key": "BNpTBS+yX1cN6I1MkuALTwya01FKffVeKIpEBZBsjuMl9MOAN4xNlhbVrx2d2KM/sIRNwhHosBS1peQ3+XMocXU=",
+    "ecc_private_key_encrypted": "MbHH+WG5UAy49Y5Frtri/xlfNtL5YAKO0TCaqIJzJZ41P0OyFQnMJgBr1X1gHdD48iFBuFozTEysMwOzwFGAgYLM41JZOBj706YX4Ma2//9M92aOmM7a4I5ojG1/ufLf7nMmEurkuuv/c93VZabAz2QMbgpiscIehsl3XCvUbpUa9IBJjmZbaArWEQdYQy6cKn37fs3ZSkecSUx0TfqfG8x7bqWMng=="
+  },
+  {
+    "id": 2,
+    "username": "bob_p9",
+    "email": "bob_p9@example.com",
+    "password_hash": "$2b$12$6RWYQYLSG8NYeDaMoMIMcuuxpvQqSqWY4nDbE/HReyHVMZ0Ltt1fS",
+    "wallet_address": null,
+    "ecc_public_key": "BOUaAnsZPrKPyz3uHlM4HdU+Uq15+Es+YbvUzLI163nESkQPHMwgW45hC3KxUMEWyYVlm19f2Ah/OqWP0CRv0r4=",
+    "ecc_private_key_encrypted": "128qrKNPisSgzoVWLRHEFvzdQox24BvixKGxzwujGCP9Xnle1+u1+z/AQ2RDFiifDU0TpNmf580dBBurgVyVpfC4aof4aOpAOZZpTCiHCzHi4Pli78DcryTwk8l88g/XkSkGhuLEgNRfDD5oZBIB4T7XC/ElNM7f5ULlFgKJknXSBHT6McooH5TYlNk4YmMxK/q1vdsrsWdOlk4pw5dHs4bwwqRf8g=="
+  }
+]

@@ -1,4 +1,5 @@
 import os
+import json
 import pymysql
 import pymysql.cursors
 import sqlite3
@@ -243,4 +244,110 @@ def _get_sqlite_connection():
             UNIQUE (file_id, receiver_id)
         );
     """)
-    return SQLiteConnectionWrapper(conn)
+
+    wrapper = SQLiteConnectionWrapper(conn)
+    try:
+        rehydrate_persistent_users(wrapper)
+    except Exception:
+        pass
+
+    return wrapper
+
+
+def _get_persistent_json_paths():
+    return [
+        os.path.abspath(os.path.join(Config.BASE_DIR, "storage", "persistent_users.json")),
+        os.path.abspath(os.path.join(Config.BASE_DIR, "..", "storage", "persistent_users.json")),
+        os.path.abspath(os.path.join(Config.BASE_DIR, "persistent_users.json")),
+        os.path.abspath(os.path.join(Config.BASE_DIR, "..", "persistent_users.json"))
+    ]
+
+
+def save_user_to_persistent_backup(user_dict: dict):
+    """Saves or updates user record in persistent JSON file across all storage paths."""
+    if not user_dict or not user_dict.get("email"):
+        return
+
+    paths = _get_persistent_json_paths()
+    for p in paths:
+        try:
+            dir_name = os.path.dirname(p)
+            if dir_name:
+                os.makedirs(dir_name, exist_ok=True)
+            users_list = []
+            if os.path.exists(p):
+                try:
+                    with open(p, 'r', encoding='utf-8') as f:
+                        users_list = json.load(f)
+                except Exception:
+                    users_list = []
+            
+            target_email = str(user_dict.get("email")).strip().lower()
+            users_list = [u for u in users_list if str(u.get("email")).strip().lower() != target_email]
+            
+            clean_record = {
+                "id": user_dict.get("id"),
+                "username": str(user_dict.get("username")).strip(),
+                "email": target_email,
+                "password_hash": user_dict.get("password_hash"),
+                "wallet_address": user_dict.get("wallet_address"),
+                "ecc_public_key": user_dict.get("ecc_public_key"),
+                "ecc_private_key_encrypted": user_dict.get("ecc_private_key_encrypted")
+            }
+            users_list.append(clean_record)
+
+            with open(p, 'w', encoding='utf-8') as f:
+                json.dump(users_list, f, indent=2)
+        except Exception as e:
+            print(f"Notice writing user backup to {p}: {e}")
+
+
+def rehydrate_persistent_users(conn):
+    """Rehydrates missing user records from persistent JSON backup into database."""
+    paths = _get_persistent_json_paths()
+    backup_users = []
+
+    for p in paths:
+        if os.path.exists(p):
+            try:
+                with open(p, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    if isinstance(data, list) and data:
+                        backup_users = data
+                        break
+            except Exception:
+                pass
+
+    if not backup_users:
+        return
+
+    try:
+        with conn.cursor() as cursor:
+            for u in backup_users:
+                email = str(u.get("email")).strip().lower()
+                username = str(u.get("username")).strip()
+                pwd_hash = u.get("password_hash")
+                if not email or not pwd_hash:
+                    continue
+
+                cursor.execute("SELECT id FROM users WHERE email = %s OR username = %s", (email, username))
+                row = cursor.fetchone()
+                if not row:
+                    try:
+                        sql = """
+                            INSERT INTO users (username, email, password_hash, wallet_address, ecc_public_key, ecc_private_key_encrypted)
+                            VALUES (%s, %s, %s, %s, %s, %s)
+                        """
+                        cursor.execute(sql, (
+                            username,
+                            email,
+                            pwd_hash,
+                            u.get("wallet_address"),
+                            u.get("ecc_public_key"),
+                            u.get("ecc_private_key_encrypted")
+                        ))
+                    except Exception as ins_err:
+                        print(f"Notice rehydrating user {email}: {ins_err}")
+        conn.commit()
+    except Exception as e:
+        print(f"Rehydration error notice: {e}")
