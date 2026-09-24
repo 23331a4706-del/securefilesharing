@@ -420,7 +420,7 @@ export default function Dashboard() {
       }
 
       // Auto-link active wallet address if different
-      if (fromAddr && fromAddr !== user?.wallet_address) {
+      if (fromAddr && fromAddr.toLowerCase() !== (user?.wallet_address || '').toLowerCase()) {
         try {
           await connectWalletAddress(fromAddr, token);
           updateUser({ wallet_address: fromAddr });
@@ -580,48 +580,51 @@ export default function Dashboard() {
     try {
       let detectedAddress = '';
 
-      // Ask user how they want to connect/link their wallet address:
-      // Option A: Auto-detect active browser MetaMask account
-      // Option B: Manually enter/paste any custom wallet address (e.g. friend's address)
-      const useAutoExtension = window.confirm(
-        "Link Web3 Wallet Address Options:\n\n• Click OK to auto-detect active MetaMask extension account.\n• Click CANCEL to manually enter/paste any custom Web3 wallet address (e.g. friend's address)."
-      );
-
-      if (useAutoExtension && window.ethereum) {
+      // 1. Request permissions & eth_requestAccounts from MetaMask browser extension
+      if (window.ethereum) {
         try {
+          try {
+            await window.ethereum.request({
+              method: 'wallet_requestPermissions',
+              params: [{ eth_accounts: {} }]
+            });
+          } catch (permErr) {
+            console.warn("MetaMask permissions request notice:", permErr);
+          }
+
           const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-          if (accounts && accounts[0]) {
+          if (accounts && accounts.length > 0) {
             detectedAddress = accounts[0];
           }
-        } catch (e) {
-          console.warn("MetaMask connection notice:", e);
+        } catch (extErr) {
+          console.warn("MetaMask connection notice:", extErr);
         }
       }
 
-      // If user selected Cancel, or extension returned no address, prompt for custom address
-      if (!detectedAddress) {
-        const inputAddress = window.prompt(
-          "Enter or paste any Web3 Wallet Address (e.g. 0x... or friend's address):",
-          user?.wallet_address || ""
-        );
+      // 2. Prompt user to confirm or enter/paste the exact desired wallet address
+      const inputPromptMsg = detectedAddress 
+        ? `MetaMask Account Detected:\n\n${detectedAddress}\n\n• Click OK to link this detected address.\n• Or edit/paste a different wallet address below (e.g. 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266):`
+        : "Enter or paste your Web3 Wallet Address (e.g. 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266):";
 
-        if (!inputAddress || !inputAddress.trim()) {
-          return; // User cancelled prompt
-        }
-        detectedAddress = inputAddress.trim();
+      const finalAddress = window.prompt(inputPromptMsg, detectedAddress || user?.wallet_address || "");
+
+      if (!finalAddress || !finalAddress.trim()) {
+        return; // User cancelled prompt
       }
+
+      const cleanAddress = finalAddress.trim();
 
       // Validate ETH address format
-      if (!detectedAddress.startsWith('0x') || detectedAddress.length < 10) {
+      if (!cleanAddress.startsWith('0x') || cleanAddress.length < 10) {
         setErrorMsg('Invalid Web3 wallet address format. Address must start with 0x.');
         return;
       }
 
-      // Save dynamically connected address to user account backend
-      const res = await connectWalletAddress(detectedAddress, token);
+      // 3. Save dynamically connected address to user account backend
+      const res = await connectWalletAddress(cleanAddress, token);
       if (res.success) {
-        updateUser({ wallet_address: detectedAddress });
-        setSuccessMsg(`✓ Dynamic Web3 wallet address updated & linked: ${detectedAddress}`);
+        updateUser({ wallet_address: cleanAddress });
+        setSuccessMsg(`✓ Web3 wallet address successfully updated & linked: ${cleanAddress}`);
       } else {
         setErrorMsg(res.message || 'Failed to link wallet address.');
       }

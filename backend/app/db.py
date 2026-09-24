@@ -304,6 +304,11 @@ def save_user_to_persistent_backup(user_dict: dict):
 
 def rehydrate_persistent_users(conn):
     """Rehydrates missing user records from persistent JSON backup into database."""
+    # Skip auto-rehydration in isolated test environments
+    db_path_env = os.getenv("SQLITE_DB_PATH", "").lower()
+    if "test" in db_path_env or os.getenv("FLASK_ENV") == "testing":
+        return
+
     paths = _get_persistent_json_paths()
     backup_users = []
 
