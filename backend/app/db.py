@@ -332,27 +332,57 @@ def rehydrate_persistent_users(conn):
                 email = str(u.get("email")).strip().lower()
                 username = str(u.get("username")).strip()
                 pwd_hash = u.get("password_hash")
+                user_id = u.get("id")
                 if not email or not pwd_hash:
                     continue
 
-                cursor.execute("SELECT id FROM users WHERE email = %s OR username = %s", (email, username))
+                cursor.execute("SELECT id FROM users WHERE email = %s OR username = %s OR id = %s", (email, username, user_id))
                 row = cursor.fetchone()
                 if not row:
                     try:
-                        sql = """
-                            INSERT INTO users (username, email, password_hash, wallet_address, ecc_public_key, ecc_private_key_encrypted)
-                            VALUES (%s, %s, %s, %s, %s, %s)
-                        """
-                        cursor.execute(sql, (
-                            username,
-                            email,
-                            pwd_hash,
-                            u.get("wallet_address"),
-                            u.get("ecc_public_key"),
-                            u.get("ecc_private_key_encrypted")
-                        ))
+                        if user_id:
+                            sql = """
+                                INSERT INTO users (id, username, email, password_hash, wallet_address, ecc_public_key, ecc_private_key_encrypted)
+                                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                            """
+                            cursor.execute(sql, (
+                                user_id,
+                                username,
+                                email,
+                                pwd_hash,
+                                u.get("wallet_address"),
+                                u.get("ecc_public_key"),
+                                u.get("ecc_private_key_encrypted")
+                            ))
+                        else:
+                            sql = """
+                                INSERT INTO users (username, email, password_hash, wallet_address, ecc_public_key, ecc_private_key_encrypted)
+                                VALUES (%s, %s, %s, %s, %s, %s)
+                            """
+                            cursor.execute(sql, (
+                                username,
+                                email,
+                                pwd_hash,
+                                u.get("wallet_address"),
+                                u.get("ecc_public_key"),
+                                u.get("ecc_private_key_encrypted")
+                            ))
                     except Exception as ins_err:
-                        print(f"Notice rehydrating user {email}: {ins_err}")
+                        try:
+                            sql = """
+                                INSERT INTO users (username, email, password_hash, wallet_address, ecc_public_key, ecc_private_key_encrypted)
+                                VALUES (%s, %s, %s, %s, %s, %s)
+                            """
+                            cursor.execute(sql, (
+                                username,
+                                email,
+                                pwd_hash,
+                                u.get("wallet_address"),
+                                u.get("ecc_public_key"),
+                                u.get("ecc_private_key_encrypted")
+                            ))
+                        except Exception:
+                            pass
         conn.commit()
     except Exception as e:
         print(f"Rehydration error notice: {e}")

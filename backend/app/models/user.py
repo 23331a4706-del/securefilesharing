@@ -54,20 +54,53 @@ def find_by_username(username: str):
         conn.close()
 
 def find_by_id(user_id: int):
-    """Finds a user by ID."""
+    """Finds a user by ID with type safety and persistent fallback."""
+    if user_id is None:
+        return None
+    try:
+        u_id = int(user_id)
+    except (ValueError, TypeError):
+        return None
+
     conn = get_db_connection()
     try:
         with conn.cursor() as cursor:
             sql = "SELECT id, username, email, wallet_address, ecc_public_key, ecc_private_key_encrypted, created_at FROM users WHERE id = %s"
-            cursor.execute(sql, (user_id,))
+            cursor.execute(sql, (u_id,))
             res = cursor.fetchone()
             if res:
                 return res
 
         rehydrate_persistent_users(conn)
         with conn.cursor() as cursor:
-            cursor.execute(sql, (user_id,))
-            return cursor.fetchone()
+            cursor.execute(sql, (u_id,))
+            res = cursor.fetchone()
+            if res:
+                return res
+
+        # Fallback: lookup in persistent JSON backup if DB row missing
+        from app.db import _get_persistent_json_paths
+        import json
+        paths = _get_persistent_json_paths()
+        for p in paths:
+            if os.path.exists(p):
+                try:
+                    with open(p, 'r', encoding='utf-8') as f:
+                        data = json.load(f)
+                        if isinstance(data, list):
+                            for u in data:
+                                if u.get("id") == u_id or str(u.get("id")) == str(u_id):
+                                    return {
+                                        "id": u.get("id"),
+                                        "username": u.get("username"),
+                                        "email": u.get("email"),
+                                        "wallet_address": u.get("wallet_address"),
+                                        "ecc_public_key": u.get("ecc_public_key"),
+                                        "ecc_private_key_encrypted": u.get("ecc_private_key_encrypted")
+                                    }
+                except Exception:
+                    pass
+        return None
     finally:
         conn.close()
 

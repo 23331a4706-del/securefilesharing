@@ -174,14 +174,24 @@ def save_wallet():
     try:
         update_user_wallet(user_id, wallet_address)
         user = find_by_id(user_id)
+        if not user:
+            return jsonify({
+                "success": True,
+                "message": "Wallet connected successfully",
+                "user": {
+                    "id": user_id,
+                    "wallet_address": wallet_address
+                }
+            }), 200
+
         return jsonify({
             "success": True,
             "message": "Wallet connected successfully",
             "user": {
-                "id": user["id"],
-                "username": user["username"],
-                "email": user["email"],
-                "wallet_address": user["wallet_address"]
+                "id": user.get("id", user_id),
+                "username": user.get("username", "User"),
+                "email": user.get("email", ""),
+                "wallet_address": user.get("wallet_address", wallet_address)
             }
         }), 200
     except Exception as e:
