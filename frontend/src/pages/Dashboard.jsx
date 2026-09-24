@@ -196,6 +196,7 @@ export default function Dashboard() {
   // Modal State for Sharing
   const [shareModalFile, setShareModalFile] = useState(null);
   const [selectedReceiverId, setSelectedReceiverId] = useState('');
+  const [receiverSearchQuery, setReceiverSearchQuery] = useState('');
   const [isSharing, setIsSharing] = useState(false);
 
   // Modal State for Share Management
@@ -899,8 +900,29 @@ export default function Dashboard() {
   const openShareModal = (file) => {
     setShareModalFile(file);
     setSelectedReceiverId('');
+    setReceiverSearchQuery('');
     setErrorMsg('');
     setSuccessMsg('');
+    getShareableUsers(token).then(res => {
+      if (res && res.success && res.users) {
+        setShareableUsers(res.users);
+      }
+    }).catch(() => {});
+  };
+
+  const handleSearchUserChange = (e) => {
+    const val = e.target.value;
+    setReceiverSearchQuery(val);
+    const q = val.trim().toLowerCase();
+    if (!q) return;
+
+    const matches = shareableUsers.filter(u => 
+      (u.email && u.email.toLowerCase().includes(q)) ||
+      (u.username && u.username.toLowerCase().includes(q))
+    );
+    if (matches.length === 1) {
+      setSelectedReceiverId(String(matches[0].id));
+    }
   };
 
   // Execute File Share
@@ -1705,10 +1727,43 @@ export default function Dashboard() {
             </div>
 
             <form onSubmit={handleExecuteShare}>
-              <div style={{ marginBottom: '1.25rem' }}>
-                <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>
-                  Select Receiver User:
+              {/* Real-time Search Box for Receiver Email or Username */}
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>
+                  🔍 Search Receiver by Email Address or Username:
                 </label>
+                <input
+                  type="text"
+                  value={receiverSearchQuery}
+                  onChange={handleSearchUserChange}
+                  placeholder="Enter receiver email (e.g. alice@example.com)..."
+                  style={{
+                    width: '100%',
+                    padding: '0.65rem 0.8rem',
+                    background: 'var(--bg-primary)',
+                    border: '1px solid var(--accent-cyan)',
+                    color: '#fff',
+                    borderRadius: 'var(--radius-sm)',
+                    fontSize: '0.85rem'
+                  }}
+                />
+              </div>
+
+              {/* Receiver User Dropdown */}
+              <div style={{ marginBottom: '1.25rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+                  <label style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0 }}>
+                    Select Receiver User:
+                  </label>
+                  {receiverSearchQuery && (
+                    <span style={{ fontSize: '0.75rem', color: 'var(--accent-cyan)' }}>
+                      {shareableUsers.filter(u => 
+                        (u.email && u.email.toLowerCase().includes(receiverSearchQuery.trim().toLowerCase())) ||
+                        (u.username && u.username.toLowerCase().includes(receiverSearchQuery.trim().toLowerCase()))
+                      ).length} matching user(s)
+                    </span>
+                  )}
+                </div>
                 <select
                   value={selectedReceiverId}
                   onChange={(e) => setSelectedReceiverId(e.target.value)}
@@ -1716,13 +1771,26 @@ export default function Dashboard() {
                   required
                 >
                   <option value="">-- Choose User --</option>
-                  {shareableUsers.map(u => (
-                    <option key={u.id} value={u.id}>
-                      {u.username} ({u.email})
-                    </option>
-                  ))}
+                  {shareableUsers
+                    .filter(u => {
+                      if (!receiverSearchQuery || !receiverSearchQuery.trim()) return true;
+                      const q = receiverSearchQuery.trim().toLowerCase();
+                      return (u.email && u.email.toLowerCase().includes(q)) || (u.username && u.username.toLowerCase().includes(q));
+                    })
+                    .map(u => (
+                      <option key={u.id} value={u.id}>
+                        {u.username} ({u.email})
+                      </option>
+                    ))}
                 </select>
               </div>
+
+              {/* Selected Receiver Summary Card */}
+              {selectedReceiverId && (
+                <div style={{ fontSize: '0.8rem', color: '#10b981', background: 'rgba(16, 185, 129, 0.1)', padding: '0.6rem 0.8rem', borderRadius: 'var(--radius-sm)', marginBottom: '1.25rem', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+                  ✓ Selected Receiver: <strong>{shareableUsers.find(u => String(u.id) === String(selectedReceiverId))?.username}</strong> ({shareableUsers.find(u => String(u.id) === String(selectedReceiverId))?.email})
+                </div>
+              )}
 
               <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', background: 'var(--bg-primary)', padding: '0.75rem', borderRadius: 'var(--radius-sm)', marginBottom: '1.25rem' }}>
                 🔑 <strong>Cryptographic Specification:</strong> P-256 ECDH agreement derives 32-byte HKDF key to wrap existing AES file key using AES-256-GCM.
