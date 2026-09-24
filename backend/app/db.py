@@ -65,34 +65,133 @@ class SQLiteConnectionWrapper:
 def get_db_connection():
     """
     Establishes and returns a database connection.
-    Defaults to PyMySQL (MySQL). Automatically falls back to zero-setup SQLite database
-    if USE_SQLITE is true or if MySQL is offline.
+    Supports cloud MySQL/Postgres via DATABASE_URL or PyMySQL.
+    Automatically falls back to persistent SQLite database with WAL mode.
     """
+    db_url = os.getenv("DATABASE_URL") or os.getenv("MYSQL_URL") or os.getenv("CLEARDB_DATABASE_URL") or os.getenv("JAWSDB_URL")
     use_sqlite_env = os.getenv("USE_SQLITE", "true").lower() == "true"
     
-    if use_sqlite_env:
-        return _get_sqlite_connection()
+    if db_url:
+        try:
+            import urllib.parse
+            url = urllib.parse.urlparse(db_url)
+            ssl_config = None
+            if "ssl" in db_url.lower() or os.getenv("MYSQL_SSL", "false").lower() == "true":
+                ssl_config = {"ssl": {}}
+            
+            connection = pymysql.connect(
+                host=url.hostname,
+                port=url.port or 3306,
+                user=url.username,
+                password=url.password,
+                database=url.path.lstrip('/'),
+                cursorclass=pymysql.cursors.DictCursor,
+                autocommit=True,
+                ssl=ssl_config
+            )
+            _init_mysql_tables(connection)
+            return connection
+        except Exception as e:
+            print("Remote DATABASE_URL connection error:", e)
 
+    if not use_sqlite_env:
+        try:
+            ssl_config = None
+            if os.getenv("MYSQL_SSL", "false").lower() == "true":
+                ssl_config = {"ssl": {}}
+
+            connection = pymysql.connect(
+                host=Config.DB_HOST,
+                port=Config.DB_PORT,
+                user=Config.DB_USER,
+                password=Config.DB_PASSWORD,
+                database=Config.DB_NAME,
+                cursorclass=pymysql.cursors.DictCursor,
+                autocommit=True,
+                ssl=ssl_config
+            )
+            _init_mysql_tables(connection)
+            return connection
+        except Exception:
+            pass
+
+    return _get_sqlite_connection()
+
+
+def _init_mysql_tables(conn):
+    """Auto-creates MySQL tables if missing when connecting to cloud or local MySQL."""
     try:
-        connection = pymysql.connect(
-            host=Config.DB_HOST,
-            port=Config.DB_PORT,
-            user=Config.DB_USER,
-            password=Config.DB_PASSWORD,
-            database=Config.DB_NAME,
-            cursorclass=pymysql.cursors.DictCursor,
-            autocommit=True
-        )
-        return connection
-    except Exception:
-        # Fallback to SQLite if MySQL fails
-        return _get_sqlite_connection()
+        with conn.cursor() as cursor:
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS users (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    username VARCHAR(50) NOT NULL UNIQUE,
+                    email VARCHAR(100) NOT NULL UNIQUE,
+                    password_hash VARCHAR(255) NOT NULL,
+                    wallet_address VARCHAR(100) DEFAULT NULL,
+                    ecc_public_key TEXT DEFAULT NULL,
+                    ecc_private_key_encrypted TEXT DEFAULT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            """)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS files (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    owner_id INT NOT NULL,
+                    original_filename VARCHAR(255) NOT NULL,
+                    stored_filename VARCHAR(255) NOT NULL UNIQUE,
+                    file_size BIGINT NOT NULL,
+                    mime_type VARCHAR(100) DEFAULT 'application/octet-stream',
+                    encryption_algorithm VARCHAR(50) DEFAULT 'AES-256-GCM',
+                    nonce VARCHAR(255) NOT NULL,
+                    encrypted_key TEXT NOT NULL,
+                    storage_path VARCHAR(255) NOT NULL,
+                    sha256_hash CHAR(64) DEFAULT NULL,
+                    ipfs_cid VARCHAR(100) DEFAULT NULL,
+                    blockchain_recorded TINYINT(1) DEFAULT 0,
+                    blockchain_tx_hash VARCHAR(100) DEFAULT NULL,
+                    status VARCHAR(50) DEFAULT 'encrypted',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE CASCADE
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            """)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS file_key_shares (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    file_id INT NOT NULL,
+                    sender_id INT NOT NULL,
+                    receiver_id INT NOT NULL,
+                    sender_ephemeral_public_key TEXT NOT NULL,
+                    encrypted_aes_key TEXT NOT NULL,
+                    key_wrap_nonce VARCHAR(255) NOT NULL,
+                    active TINYINT(1) DEFAULT 1,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                    FOREIGN KEY (file_id) REFERENCES files(id) ON DELETE CASCADE,
+                    FOREIGN KEY (sender_id) REFERENCES users(id),
+                    FOREIGN KEY (receiver_id) REFERENCES users(id),
+                    UNIQUE KEY unique_file_receiver (file_id, receiver_id)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            """)
+    except Exception as e:
+        print("MySQL table init notice:", e)
 
 
 def _get_sqlite_connection():
-    db_path = os.getenv("SQLITE_DB_PATH", os.path.abspath(os.path.join(Config.BASE_DIR, "..", "secure_file_sharing.db")))
-    conn = sqlite3.connect(db_path, timeout=10.0)
+    default_db = os.path.abspath(os.path.join(Config.BASE_DIR, "..", "secure_file_sharing.db"))
+    db_path = os.getenv("SQLITE_DB_PATH", default_db)
+    
+    dir_path = os.path.dirname(os.path.abspath(db_path))
+    if dir_path:
+        os.makedirs(dir_path, exist_ok=True)
+        
+    conn = sqlite3.connect(db_path, timeout=15.0)
     conn.isolation_level = None  # Autocommit mode
+    try:
+        conn.execute("PRAGMA journal_mode=WAL;")
+    except Exception:
+        pass
+
     conn.execute("""
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,

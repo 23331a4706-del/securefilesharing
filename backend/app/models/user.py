@@ -65,7 +65,9 @@ def create_user(username: str, email: str, password_hash: str) -> int:
                 VALUES (%s, %s, %s, NULL, %s, %s)
             """
             cursor.execute(sql, (username.strip(), email.strip().lower(), password_hash, public_key_b64, private_key_encrypted_b64))
-            return cursor.lastrowid
+            row_id = cursor.lastrowid
+        conn.commit()
+        return row_id
     finally:
         conn.close()
 
@@ -76,6 +78,7 @@ def update_user_wallet(user_id: int, wallet_address: str):
         with conn.cursor() as cursor:
             sql = "UPDATE users SET wallet_address = %s WHERE id = %s"
             cursor.execute(sql, (wallet_address.strip(), user_id))
+        conn.commit()
     finally:
         conn.close()
 
@@ -107,6 +110,7 @@ def ensure_user_ecc_keys(user_id: int) -> dict:
                 WHERE id = %s
             """
             cursor.execute(sql, (public_key_b64, private_key_encrypted_b64, user_id))
+        conn.commit()
         user["ecc_public_key"] = public_key_b64
         user["ecc_private_key_encrypted"] = private_key_encrypted_b64
         return user
