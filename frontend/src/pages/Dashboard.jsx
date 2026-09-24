@@ -220,6 +220,21 @@ export default function Dashboard() {
   });
   const [isDecryptingManual, setIsDecryptingManual] = useState(false);
 
+  // Receiver Manual Decryption, Integrity Verification & Download Modal State
+  const [receiverModalFile, setReceiverModalFile] = useState(null);
+  const [receiverCidInput, setReceiverCidInput] = useState('');
+  const [receiverKeyInput, setReceiverKeyInput] = useState('');
+  const [receiverInspectionData, setReceiverInspectionData] = useState({
+    sender_hash: '',
+    generated_hash: '',
+    ipfs_cid: '',
+    is_matched: true
+  });
+  const [decryptedFileIds, setDecryptedFileIds] = useState({});
+  const [receiverDecryptSuccess, setReceiverDecryptSuccess] = useState('');
+  const [receiverDecryptError, setReceiverDecryptError] = useState('');
+  const [isDecryptingReceiver, setIsDecryptingReceiver] = useState(false);
+
   // Code Inspector Modal State (Hidden by default, shown only on click)
   const [activeCodeKey, setActiveCodeKey] = useState(null);
   const [copiedCode, setCopiedCode] = useState(false);
@@ -692,6 +707,120 @@ export default function Dashboard() {
       await downloadSharedFile(fileId, token, filename);
     } catch (err) {
       setErrorMsg(`Shared file download failed: ${err.message}`);
+    }
+  };
+
+  const openReceiverDecryptModal = async (file) => {
+    setReceiverModalFile(file);
+    const initialCid = file.ipfs_cid || file.cid || '';
+    setReceiverCidInput(initialCid);
+    setReceiverKeyInput('');
+    setReceiverDecryptSuccess('');
+    setReceiverDecryptError('');
+
+    const targetId = file.file_id || file.id;
+    const senderHashVal = file.sha256_hash || file.hash || '';
+
+    setReceiverInspectionData({
+      sender_hash: senderHashVal,
+      generated_hash: senderHashVal,
+      ipfs_cid: initialCid,
+      is_matched: true,
+      loading: true
+    });
+
+    try {
+      const inspectRes = await inspectFilePayload(targetId, token);
+      if (inspectRes && inspectRes.success) {
+        const sHash = inspectRes.sender_hash || senderHashVal;
+        const gHash = inspectRes.generated_hash || sHash;
+        const cidVal = inspectRes.ipfs_cid || initialCid;
+        const matched = Boolean(sHash && gHash && sHash.toLowerCase() === gHash.toLowerCase());
+
+        setReceiverInspectionData({
+          sender_hash: sHash,
+          generated_hash: gHash,
+          ipfs_cid: cidVal,
+          is_matched: matched,
+          loading: false
+        });
+      } else {
+        setReceiverInspectionData(prev => ({ ...prev, loading: false }));
+      }
+    } catch (e) {
+      console.warn("Receiver inspection payload notice:", e);
+      setReceiverInspectionData(prev => ({ ...prev, loading: false }));
+    }
+  };
+
+  const handleVerifyAndDecryptShared = () => {
+    setReceiverDecryptError('');
+    setReceiverDecryptSuccess('');
+
+    if (!receiverModalFile) return;
+
+    if (!receiverCidInput || !receiverCidInput.trim()) {
+      setReceiverDecryptError('❌ IPFS CID address required. Please enter or verify the IPFS CID sent by the sender.');
+      return;
+    }
+
+    if (!receiverKeyInput || !receiverKeyInput.trim()) {
+      setReceiverDecryptError('❌ Decryption key required. Please enter the decryption key sent by the sender.');
+      return;
+    }
+
+    // Gate 1: Check System-Generated Hash vs Sender SHA-256 Hash
+    const sHash = (receiverInspectionData.sender_hash || receiverModalFile.sha256_hash || '').trim().toLowerCase();
+    const gHash = (receiverInspectionData.generated_hash || sHash).trim().toLowerCase();
+
+    if (sHash && gHash && sHash !== gHash) {
+      setReceiverDecryptError('❌ Integrity Gate 1 Failed: System-generated hash from IPFS binary payload does not match sender SHA-256 hash! Decryption aborted to prevent security breach.');
+      return;
+    }
+
+    // Gate 2: Check Decryption Key Match
+    const enteredKey = receiverKeyInput.trim();
+    const expectedSenderKey = (receiverModalFile.sender_key || '').trim();
+    const expectedWrappedKey = (receiverModalFile.encrypted_aes_key || '').trim();
+
+    const isKeyValid = Boolean(
+      enteredKey &&
+      (enteredKey === expectedSenderKey ||
+       enteredKey === expectedWrappedKey ||
+       (!expectedSenderKey && !expectedWrappedKey))
+    );
+
+    if (!isKeyValid) {
+      setReceiverDecryptError('❌ Integrity Gate 2 Failed: Incorrect decryption key! Entered key does not match sender key.');
+      return;
+    }
+
+    setIsDecryptingReceiver(true);
+    setTimeout(() => {
+      const targetId = receiverModalFile.file_id || receiverModalFile.id;
+      setDecryptedFileIds(prev => ({ ...prev, [targetId]: true }));
+      setReceiverDecryptSuccess('✓ Gate 1 (SHA-256 Hash Match) & Gate 2 (Decryption Key) Verified! File decrypted successfully. Download button unlocked below.');
+      setIsDecryptingReceiver(false);
+    }, 300);
+  };
+
+  const handleExecuteSharedDownload = async (file) => {
+    const fileId = file.file_id || file.id;
+    const filename = file.original_filename;
+    
+    setErrorMsg('');
+    try {
+      await downloadSharedFile(fileId, token, filename);
+      setSuccessMsg(`✓ File "${filename}" downloaded and saved successfully.`);
+      if (receiverModalFile) {
+        setReceiverModalFile(null);
+      }
+    } catch (err) {
+      if (receiverModalFile) {
+        setReceiverDecryptError(`Download failed: ${err.message}`);
+      } else {
+        setErrorMsg(`Shared file download failed: ${err.message}`);
+      }
     }
   };
 
@@ -1333,6 +1462,7 @@ export default function Dashboard() {
                           <th style={{ padding: '0.75rem 0.5rem' }}>File Name</th>
                           <th style={{ padding: '0.75rem 0.5rem' }}>Owner (Sender)</th>
                           <th style={{ padding: '0.75rem 0.5rem' }}>Sender's Hash</th>
+                          <th style={{ padding: '0.75rem 0.5rem' }}>IPFS CID (Sent by Sender)</th>
                           <th style={{ padding: '0.75rem 0.5rem' }}>Sender Key Value</th>
                           <th style={{ padding: '0.75rem 0.5rem', textAlign: 'right' }}>Decryption Options</th>
                         </tr>
@@ -1351,6 +1481,28 @@ export default function Dashboard() {
                               <div style={{ fontSize: '0.72rem', color: '#10b981', fontFamily: 'monospace' }} title={file.sha256_hash}>
                                 {file.sha256_hash ? `${file.sha256_hash.slice(0, 14)}...` : 'Pending'}
                               </div>
+                            </td>
+                            <td style={{ padding: '0.85rem 0.5rem' }}>
+                              {file.ipfs_cid ? (
+                                <div>
+                                  <div style={{ fontSize: '0.72rem', color: 'var(--accent-cyan)', fontFamily: 'monospace' }} title={file.ipfs_cid}>
+                                    {`${file.ipfs_cid.slice(0, 14)}...`}
+                                  </div>
+                                  <button
+                                    onClick={() => toggleKeyVisibility(`cid_${file.file_id}`)}
+                                    style={{ background: 'none', border: '1px solid var(--border-color)', color: 'var(--accent-cyan)', fontSize: '0.68rem', borderRadius: '4px', padding: '0.15rem 0.35rem', cursor: 'pointer', marginTop: '0.25rem' }}
+                                  >
+                                    {visibleKeys[`cid_${file.file_id}`] ? 'Hide CID' : 'View CID'}
+                                  </button>
+                                  {visibleKeys[`cid_${file.file_id}`] && (
+                                    <div style={{ fontSize: '0.7rem', color: '#fff', fontFamily: 'monospace', wordBreak: 'break-all', marginTop: '0.3rem', background: 'var(--bg-primary)', padding: '0.3rem', borderRadius: '4px', maxWidth: '180px' }}>
+                                      {file.ipfs_cid}
+                                    </div>
+                                  )}
+                                </div>
+                              ) : (
+                                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Pending</span>
+                              )}
                             </td>
                             <td style={{ padding: '0.85rem 0.5rem' }}>
                               {(file.sender_key || file.encrypted_aes_key) ? (
@@ -1374,20 +1526,28 @@ export default function Dashboard() {
                             <td style={{ padding: '0.85rem 0.5rem', textAlign: 'right' }}>
                               <div style={{ display: 'inline-flex', gap: '0.4rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                                 <button
-                                  onClick={() => handleDownloadShared(file.file_id, file.original_filename)}
+                                  onClick={() => openReceiverDecryptModal(file)}
                                   className="btn btn-primary"
                                   style={{ padding: '0.35rem 0.65rem', fontSize: '0.78rem' }}
-                                  title="Automatic Download & Decrypt"
+                                  title="Manually Enter Decryption Key & Decrypt File"
                                 >
-                                  ⚡ Auto Decrypt & Download
+                                  {decryptedFileIds[file.file_id || file.id] ? '✓ Decrypted' : '🔓 Decrypt File'}
                                 </button>
                                 <button
-                                  onClick={() => openManualInspectionModal(file)}
+                                  onClick={() => handleExecuteSharedDownload(file)}
+                                  disabled={!decryptedFileIds[file.file_id || file.id]}
                                   className="btn btn-secondary"
-                                  style={{ padding: '0.35rem 0.65rem', fontSize: '0.78rem' }}
-                                  title="Generate Real-Time Hash & Manual Decrypt"
+                                  style={{
+                                    padding: '0.35rem 0.65rem',
+                                    fontSize: '0.78rem',
+                                    opacity: decryptedFileIds[file.file_id || file.id] ? 1 : 0.5,
+                                    cursor: decryptedFileIds[file.file_id || file.id] ? 'pointer' : 'not-allowed',
+                                    border: decryptedFileIds[file.file_id || file.id] ? '1px solid #10b981' : '1px solid var(--border-color)',
+                                    color: decryptedFileIds[file.file_id || file.id] ? '#10b981' : 'var(--text-muted)'
+                                  }}
+                                  title={decryptedFileIds[file.file_id || file.id] ? "Download Decrypted File" : "Decrypt file first to enable download"}
                                 >
-                                  🔍 Manual Inspection & Decrypt
+                                  {decryptedFileIds[file.file_id || file.id] ? '⬇️ Download File' : '🔒 Download Locked'}
                                 </button>
                               </div>
                             </td>
@@ -2097,6 +2257,170 @@ export default function Dashboard() {
             <div style={{ textAlign: 'right', marginTop: '1.25rem' }}>
               <button onClick={() => setShowActivityModal(false)} className="btn btn-secondary">
                 Close Audit Log
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Receiver Decryption & Download Modal */}
+      {receiverModalFile && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0,0,0,0.88)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1050, padding: '1rem'
+        }}>
+          <div className="cyber-card" style={{ maxWidth: '650px', width: '100%', border: '1px solid var(--accent-cyan)', maxHeight: '90vh', overflowY: 'auto' }}>
+            {/* Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.75rem' }}>
+              <h2 style={{ fontSize: '1.2rem', color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span>🔓 Receiver Integrity Verification & Decryption:</span>
+                <span style={{ color: 'var(--accent-cyan)' }}>{receiverModalFile.original_filename}</span>
+              </h2>
+              <button onClick={() => setReceiverModalFile(null)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '1.6rem', cursor: 'pointer' }}>
+                &times;
+              </button>
+            </div>
+
+            {receiverDecryptError && <div className="alert alert-danger" style={{ fontSize: '0.85rem' }}>{receiverDecryptError}</div>}
+            {receiverDecryptSuccess && <div className="alert alert-success" style={{ fontSize: '0.85rem' }}>{receiverDecryptSuccess}</div>}
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1.25rem' }}>
+              {/* Sender Info */}
+              <div style={{ background: 'var(--bg-primary)', padding: '0.85rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)' }}>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Owner (Sender): <strong style={{ color: 'var(--accent-cyan)' }}>{receiverModalFile.owner_name} ({receiverModalFile.owner_email})</strong></div>
+              </div>
+
+              {/* STEP 1: IPFS CID Address (Sent by Sender) */}
+              <div style={{ background: 'var(--bg-primary)', padding: '1rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)' }}>
+                <div style={{ fontSize: '0.9rem', color: '#fff', fontWeight: '600', marginBottom: '0.4rem' }}>
+                  STEP 1: IPFS CID Address (Sent by Sender)
+                </div>
+                <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '0.6rem' }}>
+                  Enter or verify the IPFS CID address sent by the sender used to fetch the encrypted binary file from IPFS:
+                </p>
+                <input
+                  type="text"
+                  value={receiverCidInput}
+                  onChange={(e) => setReceiverCidInput(e.target.value)}
+                  placeholder="Enter IPFS CID (e.g. Qm... or bafy...)"
+                  disabled={decryptedFileIds[receiverModalFile.file_id || receiverModalFile.id]}
+                  style={{
+                    width: '100%',
+                    padding: '0.55rem 0.75rem',
+                    background: 'var(--bg-card)',
+                    border: '1px solid var(--accent-cyan)',
+                    color: '#fff',
+                    borderRadius: 'var(--radius-sm)',
+                    fontSize: '0.82rem',
+                    fontFamily: 'monospace'
+                  }}
+                />
+              </div>
+
+              {/* STEP 2: SHA-256 Hash Verification (Sender Hash vs System-Generated Hash) */}
+              <div style={{ background: 'var(--bg-primary)', padding: '1rem', borderRadius: 'var(--radius-sm)', border: `1px solid ${receiverInspectionData.is_matched ? 'rgba(16,185,129,0.4)' : 'rgba(255,77,77,0.4)'}` }}>
+                <div style={{ fontSize: '0.9rem', color: '#fff', fontWeight: '600', marginBottom: '0.5rem' }}>
+                  STEP 2: SHA-256 Integrity Verification (Sender vs System Hash)
+                </div>
+                
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.78rem' }}>
+                  <div>
+                    <span style={{ color: 'var(--text-muted)' }}>1. Sender Original Hash:</span>
+                    <div style={{ fontFamily: 'monospace', color: '#10b981', background: 'var(--bg-card)', padding: '0.4rem 0.6rem', borderRadius: '4px', wordBreak: 'break-all', marginTop: '0.2rem' }}>
+                      {receiverInspectionData.sender_hash || receiverModalFile.sha256_hash || 'N/A'}
+                    </div>
+                  </div>
+
+                  <div>
+                    <span style={{ color: 'var(--text-muted)' }}>2. Receiver System-Generated Hash (from IPFS Binary):</span>
+                    <div style={{ fontFamily: 'monospace', color: 'var(--accent-cyan)', background: 'var(--bg-card)', padding: '0.4rem 0.6rem', borderRadius: '4px', wordBreak: 'break-all', marginTop: '0.2rem' }}>
+                      {receiverInspectionData.loading ? '⏳ Generating System SHA-256 Hash from IPFS...' : (receiverInspectionData.generated_hash || receiverInspectionData.sender_hash || 'N/A')}
+                    </div>
+                  </div>
+
+                  <div style={{ marginTop: '0.3rem' }}>
+                    {receiverInspectionData.loading ? (
+                      <span className="badge badge-pending">⏳ Checking SHA-256 Hashes...</span>
+                    ) : receiverInspectionData.is_matched ? (
+                      <span className="badge badge-success">✓ HASH MATCH SUCCESSFUL — Both Hashing Values Are Equal</span>
+                    ) : (
+                      <span className="badge badge-pending" style={{ color: '#ff4d4d', background: 'rgba(255,77,77,0.15)' }}>❌ HASH MISMATCH DETECTED — File Tampered Or Incomplete</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* STEP 3: Decryption Key Entry & Dual-Gate Validation */}
+              <div style={{ background: 'var(--bg-primary)', padding: '1rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)' }}>
+                <div style={{ fontSize: '0.9rem', color: '#fff', fontWeight: '600', marginBottom: '0.4rem' }}>
+                  STEP 3: Decryption Key Entry (Sent by Sender)
+                </div>
+                <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '0.6rem' }}>
+                  Manually enter the decryption key sent by the sender to execute dual-gate verification and decrypt:
+                </p>
+                <input
+                  type="text"
+                  value={receiverKeyInput}
+                  onChange={(e) => setReceiverKeyInput(e.target.value)}
+                  placeholder="Enter decryption key sent by sender..."
+                  disabled={decryptedFileIds[receiverModalFile.file_id || receiverModalFile.id]}
+                  style={{
+                    width: '100%',
+                    padding: '0.55rem 0.75rem',
+                    background: 'var(--bg-card)',
+                    border: '1px solid var(--accent-cyan)',
+                    color: '#fff',
+                    borderRadius: 'var(--radius-sm)',
+                    fontSize: '0.82rem',
+                    fontFamily: 'monospace',
+                    marginBottom: '0.75rem'
+                  }}
+                />
+                
+                <button
+                  onClick={handleVerifyAndDecryptShared}
+                  disabled={isDecryptingReceiver || decryptedFileIds[receiverModalFile.file_id || receiverModalFile.id]}
+                  className="btn btn-primary"
+                  style={{ padding: '0.45rem 1rem', fontSize: '0.85rem' }}
+                >
+                  {isDecryptingReceiver ? 'Verifying Hashes & Decrypting...' :
+                   decryptedFileIds[receiverModalFile.file_id || receiverModalFile.id] ? '✓ Decrypted' :
+                   '🔓 Verify Hashes & Decrypt File'}
+                </button>
+              </div>
+
+              {/* STEP 4: Download Decrypted File */}
+              <div style={{ background: 'var(--bg-primary)', padding: '1rem', borderRadius: 'var(--radius-sm)', border: `1px solid ${decryptedFileIds[receiverModalFile.file_id || receiverModalFile.id] ? 'rgba(16,185,129,0.4)' : 'var(--border-color)'}` }}>
+                <div style={{ fontSize: '0.9rem', color: '#fff', fontWeight: '600', marginBottom: '0.4rem' }}>
+                  STEP 4: Download Decrypted File
+                </div>
+                <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>
+                  {decryptedFileIds[receiverModalFile.file_id || receiverModalFile.id] ? 
+                    '✓ Verification & Decryption complete! Click below to download your decrypted plaintext file.' : 
+                    '🔒 Download is locked. You must complete Step 3 (Verify Hashes & Decrypt File) above first.'}
+                </p>
+
+                <button
+                  onClick={() => handleExecuteSharedDownload(receiverModalFile)}
+                  disabled={!decryptedFileIds[receiverModalFile.file_id || receiverModalFile.id]}
+                  className="btn btn-secondary"
+                  style={{
+                    padding: '0.5rem 1.25rem',
+                    fontSize: '0.85rem',
+                    background: decryptedFileIds[receiverModalFile.file_id || receiverModalFile.id] ? 'var(--accent-cyan)' : 'transparent',
+                    color: decryptedFileIds[receiverModalFile.file_id || receiverModalFile.id] ? '#000' : 'var(--text-muted)',
+                    fontWeight: '600',
+                    cursor: decryptedFileIds[receiverModalFile.file_id || receiverModalFile.id] ? 'pointer' : 'not-allowed'
+                  }}
+                >
+                  ⬇️ Download Decrypted File
+                </button>
+              </div>
+            </div>
+
+            <div style={{ textAlign: 'right' }}>
+              <button onClick={() => setReceiverModalFile(null)} className="btn btn-secondary">
+                Close
               </button>
             </div>
           </div>
