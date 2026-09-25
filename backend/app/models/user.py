@@ -1,9 +1,11 @@
+import os
 import bcrypt
 from app.db import get_db_connection
 
 def hash_password(password: str) -> str:
-    """Hashes a plain-text password using bcrypt."""
-    salt = bcrypt.gensalt(rounds=12)
+    """Hashes a plain-text password using bcrypt, optimized for high-performance cloud environments."""
+    rounds = 10 if os.getenv("DATABASE_URL") else 12
+    salt = bcrypt.gensalt(rounds=rounds)
     hashed = bcrypt.hashpw(password.encode('utf-8'), salt)
     return hashed.decode('utf-8')
 
