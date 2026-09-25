@@ -11,12 +11,17 @@ def verify_password(password: str, password_hash: str) -> bool:
     """Verifies a plain-text password against a bcrypt hash."""
     if not password or not password_hash:
         return False
-    return bcrypt.checkpw(password.encode('utf-8'), password_hash.encode('utf-8'))
+    try:
+        return bcrypt.checkpw(password.encode('utf-8'), password_hash.encode('utf-8'))
+    except Exception:
+        return False
 
 from app.db import get_db_connection, save_user_to_persistent_backup, rehydrate_persistent_users
 
 def find_by_email(email: str):
     """Finds a user by email, auto-rehydrating from persistent backup if needed."""
+    if not email:
+        return None
     conn = get_db_connection()
     try:
         with conn.cursor() as cursor:
@@ -27,15 +32,27 @@ def find_by_email(email: str):
                 return res
         
         # Auto-rehydrate from JSON backup if missing (e.g. server restart)
-        rehydrate_persistent_users(conn)
+        try:
+            rehydrate_persistent_users(conn)
+        except Exception:
+            pass
+
         with conn.cursor() as cursor:
             cursor.execute(sql, (email.strip().lower(),))
             return cursor.fetchone()
+    except Exception as e:
+        print("find_by_email notice:", e)
+        return None
     finally:
-        conn.close()
+        try:
+            conn.close()
+        except Exception:
+            pass
 
 def find_by_username(username: str):
     """Finds a user by username, auto-rehydrating from persistent backup if needed."""
+    if not username:
+        return None
     conn = get_db_connection()
     try:
         with conn.cursor() as cursor:
@@ -46,12 +63,22 @@ def find_by_username(username: str):
                 return res
         
         # Auto-rehydrate from JSON backup if missing
-        rehydrate_persistent_users(conn)
+        try:
+            rehydrate_persistent_users(conn)
+        except Exception:
+            pass
+
         with conn.cursor() as cursor:
             cursor.execute(sql, (username.strip(),))
             return cursor.fetchone()
+    except Exception as e:
+        print("find_by_username notice:", e)
+        return None
     finally:
-        conn.close()
+        try:
+            conn.close()
+        except Exception:
+            pass
 
 def find_by_id(user_id: int):
     """Finds a user by ID with type safety and persistent fallback."""
@@ -65,13 +92,17 @@ def find_by_id(user_id: int):
     conn = get_db_connection()
     try:
         with conn.cursor() as cursor:
-            sql = "SELECT id, username, email, wallet_address, ecc_public_key, ecc_private_key_encrypted, created_at FROM users WHERE id = %s"
+            sql = "SELECT id, username, email, password_hash, wallet_address, ecc_public_key, ecc_private_key_encrypted, created_at FROM users WHERE id = %s"
             cursor.execute(sql, (u_id,))
             res = cursor.fetchone()
             if res:
                 return res
 
-        rehydrate_persistent_users(conn)
+        try:
+            rehydrate_persistent_users(conn)
+        except Exception:
+            pass
+
         with conn.cursor() as cursor:
             cursor.execute(sql, (u_id,))
             res = cursor.fetchone()
@@ -101,8 +132,14 @@ def find_by_id(user_id: int):
                 except Exception:
                     pass
         return None
+    except Exception as e:
+        print("find_by_id notice:", e)
+        return None
     finally:
-        conn.close()
+        try:
+            conn.close()
+        except Exception:
+            pass
 
 def create_user(username: str, email: str, password_hash: str) -> int:
     """
@@ -120,14 +157,45 @@ def create_user(username: str, email: str, password_hash: str) -> int:
         clean_username = username.strip()
         clean_email = email.strip().lower()
 
+        is_postgres = False
+        try:
+            if hasattr(conn, 'pgconn') or (conn.__class__.__module__ and 'psycopg' in conn.__class__.__module__):
+                is_postgres = True
+        except Exception:
+            pass
+
+        row_id = None
         with conn.cursor() as cursor:
-            sql = """
-                INSERT INTO users (username, email, password_hash, wallet_address, ecc_public_key, ecc_private_key_encrypted)
-                VALUES (%s, %s, %s, NULL, %s, %s)
-            """
-            cursor.execute(sql, (clean_username, clean_email, password_hash, public_key_b64, private_key_encrypted_b64))
-            row_id = cursor.lastrowid
-        conn.commit()
+            if is_postgres:
+                sql = """
+                    INSERT INTO users (username, email, password_hash, wallet_address, ecc_public_key, ecc_private_key_encrypted)
+                    VALUES (%s, %s, %s, NULL, %s, %s)
+                    RETURNING id
+                """
+                cursor.execute(sql, (clean_username, clean_email, password_hash, public_key_b64, private_key_encrypted_b64))
+                row = cursor.fetchone()
+                if row:
+                    row_id = row.get("id") if isinstance(row, dict) else row[0]
+            else:
+                sql = """
+                    INSERT INTO users (username, email, password_hash, wallet_address, ecc_public_key, ecc_private_key_encrypted)
+                    VALUES (%s, %s, %s, NULL, %s, %s)
+                """
+                cursor.execute(sql, (clean_username, clean_email, password_hash, public_key_b64, private_key_encrypted_b64))
+                row_id = getattr(cursor, "lastrowid", None)
+
+        try:
+            conn.commit()
+        except Exception:
+            pass
+
+        # Fallback: if row_id is missing or None, fetch newly created ID via SELECT
+        if not row_id:
+            with conn.cursor() as cursor:
+                cursor.execute("SELECT id FROM users WHERE email = %s", (clean_email,))
+                row = cursor.fetchone()
+                if row:
+                    row_id = row.get("id") if isinstance(row, dict) else row[0]
 
         # Save record permanently to persistent JSON backup engine
         save_user_to_persistent_backup({
@@ -142,7 +210,10 @@ def create_user(username: str, email: str, password_hash: str) -> int:
 
         return row_id
     finally:
-        conn.close()
+        try:
+            conn.close()
+        except Exception:
+            pass
 
 def update_user_wallet(user_id: int, wallet_address: str):
     """Updates a user's connected Ethereum wallet address."""

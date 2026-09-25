@@ -42,33 +42,33 @@ def register():
     POST /api/auth/register
     Registers a new user after validation and password hashing.
     """
-    data = request.get_json() or {}
-    
-    username = data.get("username", "").strip()
-    email = data.get("email", "").strip().lower()
-    password = data.get("password", "")
-
-    # Validation
-    if not username:
-        return jsonify({"success": False, "message": "Username is required."}), 400
-    if not email:
-        return jsonify({"success": False, "message": "Email is required."}), 400
-    if not EMAIL_REGEX.match(email):
-        return jsonify({"success": False, "message": "Invalid email format."}), 400
-    if not password:
-        return jsonify({"success": False, "message": "Password is required."}), 400
-    if len(password) < 6:
-        return jsonify({"success": False, "message": "Password must be at least 6 characters long."}), 400
-
-    # Check existing username & email
-    if find_by_username(username):
-        return jsonify({"success": False, "message": "Username is already taken."}), 409
-    if find_by_email(email):
-        return jsonify({"success": False, "message": "Email is already registered."}), 409
-
-    # Hash password & insert into database
-    pwd_hash = hash_password(password)
     try:
+        data = request.get_json() or {}
+        
+        username = data.get("username", "").strip()
+        email = data.get("email", "").strip().lower()
+        password = data.get("password", "")
+
+        # Validation
+        if not username:
+            return jsonify({"success": False, "message": "Username is required."}), 400
+        if not email:
+            return jsonify({"success": False, "message": "Email is required."}), 400
+        if not EMAIL_REGEX.match(email):
+            return jsonify({"success": False, "message": "Invalid email format."}), 400
+        if not password:
+            return jsonify({"success": False, "message": "Password is required."}), 400
+        if len(password) < 6:
+            return jsonify({"success": False, "message": "Password must be at least 6 characters long."}), 400
+
+        # Check existing username & email
+        if find_by_username(username):
+            return jsonify({"success": False, "message": "Username is already taken."}), 409
+        if find_by_email(email):
+            return jsonify({"success": False, "message": "Email is already registered."}), 409
+
+        # Hash password & insert into database
+        pwd_hash = hash_password(password)
         user_id = create_user(username=username, email=email, password_hash=pwd_hash)
         
         # Return safe user data
@@ -91,34 +91,37 @@ def login():
     POST /api/auth/login
     Authenticates user with email and password, returning JWT token.
     """
-    data = request.get_json() or {}
-    
-    email = data.get("email", "").strip().lower()
-    password = data.get("password", "")
+    try:
+        data = request.get_json() or {}
+        
+        email = data.get("email", "").strip().lower()
+        password = data.get("password", "")
 
-    if not email or not password:
-        return jsonify({"success": False, "message": "Email and password are required."}), 400
+        if not email or not password:
+            return jsonify({"success": False, "message": "Email and password are required."}), 400
 
-    user = find_by_email(email)
-    if not user:
-        return jsonify({"success": False, "message": "Invalid email or password."}), 401
+        user = find_by_email(email)
+        if not user or not user.get("password_hash"):
+            return jsonify({"success": False, "message": "Invalid email or password."}), 401
 
-    if not verify_password(password, user["password_hash"]):
-        return jsonify({"success": False, "message": "Invalid email or password."}), 401
+        if not verify_password(password, user["password_hash"]):
+            return jsonify({"success": False, "message": "Invalid email or password."}), 401
 
-    token = generate_jwt_token(user["id"])
+        token = generate_jwt_token(user["id"])
 
-    return jsonify({
-        "success": True,
-        "message": "Login successful",
-        "token": token,
-        "user": {
-            "id": user["id"],
-            "username": user["username"],
-            "email": user["email"],
-            "wallet_address": user["wallet_address"]
-        }
-    }), 200
+        return jsonify({
+            "success": True,
+            "message": "Login successful",
+            "token": token,
+            "user": {
+                "id": user["id"],
+                "username": user["username"],
+                "email": user["email"],
+                "wallet_address": user.get("wallet_address")
+            }
+        }), 200
+    except Exception as e:
+        return jsonify({"success": False, "message": f"Login failed: {str(e)}"}), 500
 
 @auth_bp.route('/api/auth/me', methods=['GET'])
 def get_current_user():

@@ -77,7 +77,16 @@ def get_db_connection():
             try:
                 import psycopg2
                 import psycopg2.extras
-                conn = psycopg2.connect(db_url, cursor_factory=psycopg2.extras.RealDictCursor)
+                fixed_url = db_url.replace("postgres://", "postgresql://", 1) if db_url.startswith("postgres://") else db_url
+                try:
+                    conn = psycopg2.connect(fixed_url, cursor_factory=psycopg2.extras.RealDictCursor)
+                except Exception as first_err:
+                    if "sslmode" not in fixed_url:
+                        sep = "&" if "?" in fixed_url else "?"
+                        conn = psycopg2.connect(f"{fixed_url}{sep}sslmode=require", cursor_factory=psycopg2.extras.RealDictCursor)
+                    else:
+                        raise first_err
+
                 conn.autocommit = True
                 _init_postgres_tables(conn)
                 return conn
@@ -353,16 +362,30 @@ def save_user_to_persistent_backup(user_dict: dict):
                     users_list = []
             
             target_email = str(user_dict.get("email")).strip().lower()
+            existing_user = next((u for u in users_list if str(u.get("email")).strip().lower() == target_email), None)
+
+            pwd_hash = user_dict.get("password_hash")
+            if not pwd_hash and existing_user:
+                pwd_hash = existing_user.get("password_hash")
+
+            wallet_addr = user_dict.get("wallet_address")
+            if wallet_addr is None and existing_user:
+                wallet_addr = existing_user.get("wallet_address")
+
+            ecc_pub = user_dict.get("ecc_public_key") or (existing_user.get("ecc_public_key") if existing_user else None)
+            ecc_priv = user_dict.get("ecc_private_key_encrypted") or (existing_user.get("ecc_private_key_encrypted") if existing_user else None)
+            u_id = user_dict.get("id") or (existing_user.get("id") if existing_user else None)
+
             users_list = [u for u in users_list if str(u.get("email")).strip().lower() != target_email]
             
             clean_record = {
-                "id": user_dict.get("id"),
-                "username": str(user_dict.get("username")).strip(),
+                "id": u_id,
+                "username": str(user_dict.get("username")).strip() if user_dict.get("username") else (existing_user.get("username") if existing_user else ""),
                 "email": target_email,
-                "password_hash": user_dict.get("password_hash"),
-                "wallet_address": user_dict.get("wallet_address"),
-                "ecc_public_key": user_dict.get("ecc_public_key"),
-                "ecc_private_key_encrypted": user_dict.get("ecc_private_key_encrypted")
+                "password_hash": pwd_hash,
+                "wallet_address": wallet_addr,
+                "ecc_public_key": ecc_pub,
+                "ecc_private_key_encrypted": ecc_priv
             }
             users_list.append(clean_record)
 
@@ -399,14 +422,18 @@ def rehydrate_persistent_users(conn):
     try:
         with conn.cursor() as cursor:
             for u in backup_users:
-                email = str(u.get("email")).strip().lower()
-                username = str(u.get("username")).strip()
+                email = str(u.get("email")).strip().lower() if u.get("email") else ""
+                username = str(u.get("username")).strip() if u.get("username") else ""
                 pwd_hash = u.get("password_hash")
                 user_id = u.get("id")
                 if not email or not pwd_hash:
                     continue
 
-                cursor.execute("SELECT id FROM users WHERE email = %s OR username = %s OR id = %s", (email, username, user_id))
+                if user_id:
+                    cursor.execute("SELECT id FROM users WHERE email = %s OR username = %s OR id = %s", (email, username, user_id))
+                else:
+                    cursor.execute("SELECT id FROM users WHERE email = %s OR username = %s", (email, username))
+
                 row = cursor.fetchone()
                 if not row:
                     try:
@@ -437,7 +464,7 @@ def rehydrate_persistent_users(conn):
                                 u.get("ecc_public_key"),
                                 u.get("ecc_private_key_encrypted")
                             ))
-                    except Exception as ins_err:
+                    except Exception:
                         try:
                             sql = """
                                 INSERT INTO users (username, email, password_hash, wallet_address, ecc_public_key, ecc_private_key_encrypted)
@@ -453,6 +480,9 @@ def rehydrate_persistent_users(conn):
                             ))
                         except Exception:
                             pass
-        conn.commit()
+        try:
+            conn.commit()
+        except Exception:
+            pass
     except Exception as e:
         print(f"Rehydration error notice: {e}")
