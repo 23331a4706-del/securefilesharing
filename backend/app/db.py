@@ -77,16 +77,7 @@ def get_db_connection():
             try:
                 import psycopg2
                 import psycopg2.extras
-                fixed_url = db_url.replace("postgres://", "postgresql://", 1) if db_url.startswith("postgres://") else db_url
-                try:
-                    conn = psycopg2.connect(fixed_url, cursor_factory=psycopg2.extras.RealDictCursor)
-                except Exception as first_err:
-                    if "sslmode" not in fixed_url:
-                        sep = "&" if "?" in fixed_url else "?"
-                        conn = psycopg2.connect(f"{fixed_url}{sep}sslmode=require", cursor_factory=psycopg2.extras.RealDictCursor)
-                    else:
-                        raise first_err
-
+                conn = psycopg2.connect(db_url, cursor_factory=psycopg2.extras.RealDictCursor)
                 conn.autocommit = True
                 _init_postgres_tables(conn)
                 return conn
@@ -139,15 +130,8 @@ def get_db_connection():
     return _get_sqlite_connection()
 
 
-_postgres_tables_initialized = False
-_mysql_tables_initialized = False
-_persistent_rehydrated = False
-
 def _init_postgres_tables(conn):
-    """Auto-creates Postgres tables if missing when connecting to Supabase / Postgres (runs once)."""
-    global _postgres_tables_initialized
-    if _postgres_tables_initialized:
-        return
+    """Auto-creates Postgres tables if missing when connecting to Supabase / Postgres."""
     try:
         with conn.cursor() as cursor:
             cursor.execute("""
@@ -201,16 +185,12 @@ def _init_postgres_tables(conn):
                     UNIQUE (file_id, receiver_id)
                 );
             """)
-        _postgres_tables_initialized = True
     except Exception as e:
         print("Postgres table init notice:", e)
 
 
 def _init_mysql_tables(conn):
-    """Auto-creates MySQL tables if missing when connecting to cloud or local MySQL (runs once)."""
-    global _mysql_tables_initialized
-    if _mysql_tables_initialized:
-        return
+    """Auto-creates MySQL tables if missing when connecting to cloud or local MySQL."""
     try:
         with conn.cursor() as cursor:
             cursor.execute("""
@@ -264,7 +244,6 @@ def _init_mysql_tables(conn):
                     UNIQUE KEY unique_file_receiver (file_id, receiver_id)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
             """)
-        _mysql_tables_initialized = True
     except Exception as e:
         print("MySQL table init notice:", e)
 
@@ -408,17 +387,11 @@ def save_user_to_persistent_backup(user_dict: dict):
 
 
 def rehydrate_persistent_users(conn):
-    """Rehydrates missing user records from persistent JSON backup into database (runs once)."""
-    global _persistent_rehydrated
-    if _persistent_rehydrated:
-        return
-
+    """Rehydrates missing user records from persistent JSON backup into database."""
     # Skip auto-rehydration in isolated test environments
     db_path_env = os.getenv("SQLITE_DB_PATH", "").lower()
     if "test" in db_path_env or os.getenv("FLASK_ENV") == "testing":
         return
-
-    _persistent_rehydrated = True
 
     paths = _get_persistent_json_paths()
     backup_users = []

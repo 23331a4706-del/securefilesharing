@@ -1,11 +1,9 @@
-import os
 import bcrypt
 from app.db import get_db_connection
 
 def hash_password(password: str) -> str:
-    """Hashes a plain-text password using bcrypt, optimized for high-performance cloud environments."""
-    rounds = 10 if os.getenv("DATABASE_URL") else 12
-    salt = bcrypt.gensalt(rounds=rounds)
+    """Hashes a plain-text password using bcrypt."""
+    salt = bcrypt.gensalt(rounds=12)
     hashed = bcrypt.hashpw(password.encode('utf-8'), salt)
     return hashed.decode('utf-8')
 
@@ -159,45 +157,14 @@ def create_user(username: str, email: str, password_hash: str) -> int:
         clean_username = username.strip()
         clean_email = email.strip().lower()
 
-        is_postgres = False
-        try:
-            if hasattr(conn, 'pgconn') or (conn.__class__.__module__ and 'psycopg' in conn.__class__.__module__):
-                is_postgres = True
-        except Exception:
-            pass
-
-        row_id = None
         with conn.cursor() as cursor:
-            if is_postgres:
-                sql = """
-                    INSERT INTO users (username, email, password_hash, wallet_address, ecc_public_key, ecc_private_key_encrypted)
-                    VALUES (%s, %s, %s, NULL, %s, %s)
-                    RETURNING id
-                """
-                cursor.execute(sql, (clean_username, clean_email, password_hash, public_key_b64, private_key_encrypted_b64))
-                row = cursor.fetchone()
-                if row:
-                    row_id = row.get("id") if isinstance(row, dict) else row[0]
-            else:
-                sql = """
-                    INSERT INTO users (username, email, password_hash, wallet_address, ecc_public_key, ecc_private_key_encrypted)
-                    VALUES (%s, %s, %s, NULL, %s, %s)
-                """
-                cursor.execute(sql, (clean_username, clean_email, password_hash, public_key_b64, private_key_encrypted_b64))
-                row_id = getattr(cursor, "lastrowid", None)
-
-        try:
-            conn.commit()
-        except Exception:
-            pass
-
-        # Fallback: if row_id is missing or None, fetch newly created ID via SELECT
-        if not row_id:
-            with conn.cursor() as cursor:
-                cursor.execute("SELECT id FROM users WHERE email = %s", (clean_email,))
-                row = cursor.fetchone()
-                if row:
-                    row_id = row.get("id") if isinstance(row, dict) else row[0]
+            sql = """
+                INSERT INTO users (username, email, password_hash, wallet_address, ecc_public_key, ecc_private_key_encrypted)
+                VALUES (%s, %s, %s, NULL, %s, %s)
+            """
+            cursor.execute(sql, (clean_username, clean_email, password_hash, public_key_b64, private_key_encrypted_b64))
+            row_id = cursor.lastrowid
+        conn.commit()
 
         # Save record permanently to persistent JSON backup engine
         save_user_to_persistent_backup({
@@ -212,10 +179,7 @@ def create_user(username: str, email: str, password_hash: str) -> int:
 
         return row_id
     finally:
-        try:
-            conn.close()
-        except Exception:
-            pass
+        conn.close()
 
 def update_user_wallet(user_id: int, wallet_address: str):
     """Updates a user's connected Ethereum wallet address."""
