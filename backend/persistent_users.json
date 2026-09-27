@@ -12,18 +12,18 @@
     "id": 1,
     "username": "alice_p9",
     "email": "alice_p9@example.com",
-    "password_hash": "$2b$12$b2OmO/9dWvmBRIlI4e40VuVIGrFSf/NDDEsu7hA9k4qDKT8Hf8Km6",
+    "password_hash": "$2b$12$ftaocyHnfrSYZI1/CW060.uu107VDBcl3zUp8dwb3BLfCeYL5OsJ6",
     "wallet_address": null,
-    "ecc_public_key": "BKsEFfMYRa8EAB7MTYJKXUVgtqEkKixN1MKTYgDhATlXBQRBh9brmnOWoHIvIB9lPPEK12lH5gZhM/Y3/YiIh1I=",
-    "ecc_private_key_encrypted": "HWBm1H9o4MwCawIoX1m4uT/oLFQaHt/Ssbj72GxuR2EazwELxhaBkRu97rglHIM+HEBtEd5cx0wAhuhTOcqB7qnuVvUNJ3C9YCvlitF1MioSGRj0riTcU37DKQU33KszPbkYeReKalHz0MSp2ccE2QEKAtOpzyz864JL4ltwvTd2cv2RSm/rjnOB9iNL+0327kcSGk1LB7wwd9fi0qsN5Qgk9Odm1Q=="
+    "ecc_public_key": "BOUxvEmQ3HRhgt12KBjWBUmv0HYD2Y8JS0VswOXWoHSViXDp6HD+oC1UiMKZtgW/UV2pUKiT2L/4nAiUUC1IAQo=",
+    "ecc_private_key_encrypted": "ljYj6Ki4rjcO5XDteCDjmM7WuMuxKdalJh2rwe5jzSyoMqHRgtCwHNq+xV7yzbkm8st4iCs9TPgiLJhUkiKjBwNrVtki/eAtFRAsUT2XyFW0gyFzKLF6q936CSu++zqs8KyNdbOd/XdB6JEjvgGN0/SFymli3YqTzWa4LtA549sos4D+CzkLWxuPV2n7c5xnC6dDp73P+21PzsG1bpFFxqPFivtGzw=="
   },
   {
     "id": 2,
     "username": "bob_p9",
     "email": "bob_p9@example.com",
-    "password_hash": "$2b$12$..9Yvyfjen.2oSqf.KCRKOQfIKh6dmfaEvF65M1Hr0S4W5isVr8SO",
+    "password_hash": "$2b$12$JPTbYqH9CP2iln7SrU0nleUhZpkr43YaAh9UmsmvSNyiFUKRkj.pS",
     "wallet_address": null,
-    "ecc_public_key": "BK7eXdHYmAIiRgvxSbqK8o5gMNQXrMM1FH+EUJRjanewxVUOordixFpKfvbk5hHQFM3IQsgmg1TKX62axfEOEeY=",
-    "ecc_private_key_encrypted": "5ZroPKbU1/8Ia+sW0wK5N0Dv6BssTd512XpkWEfcRmQ8641mmUaSGBSH4Oqbb9pTMG9XHW32Bacr7+rVeosXwoRFHjacYpcflaB/3JWQxcRANPIHCs/cboPqFZ5F5siK2Sf92WqQsMVRSrn/YFG+Sckw5PwuKzri8sBlBxcQ4peex0ZsBV2kLGvayMGPXdHjsAcxbDGL0FF2yDDisMLqlTmTQ+MZfA=="
+    "ecc_public_key": "BCVulWIj+pqCSalvwnPtuiHIZfhXYS0DB7n0+ulDJzpd88tTtODL4hmeTH5tfkCKaK1/sLPG9axh1eoVncWX7wY=",
+    "ecc_private_key_encrypted": "1DnqPcQl2W3bYckvJeWmcIUMt3emKlxCWAPXbFyUtXhmz0mhv2MrhXngGfcMnaQOXA+lKOozGDfC5SNcxJnZrCyiFuRjnMe6Xr1/Qmt1kVoKzq4D00b6A5TlFcNnQwjhtMpIc7t+b7S1Wps6ZP8Tv+pTFmgtcFHVDsXzNAQJ/NAbtlWbwBYU7I+8xth+dCV1Hma4o8UaTeEdRNbAQPh3qjvKBazqog=="
   }
 ]

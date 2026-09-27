@@ -342,12 +342,12 @@ export default function Dashboard() {
       fetchDashboardData();
     }
 
-    // Real-time listener for MetaMask account switching inside extension
+    // Listener for explicit MetaMask account switching after user connects
     if (window.ethereum) {
       const handleAccountsChanged = async (accounts) => {
-        if (accounts && accounts.length > 0) {
+        if (accounts && accounts.length > 0 && user?.wallet_address) {
           const newAddress = accounts[0];
-          if (newAddress && newAddress.toLowerCase() !== (user?.wallet_address || '').toLowerCase()) {
+          if (newAddress && newAddress.toLowerCase() !== user.wallet_address.toLowerCase()) {
             try {
               const res = await connectWalletAddress(newAddress, token);
               if (res.success) {
@@ -362,15 +362,6 @@ export default function Dashboard() {
       };
 
       window.ethereum.on('accountsChanged', handleAccountsChanged);
-
-      // Initial sync check on component load
-      window.ethereum.request({ method: 'eth_accounts' })
-        .then(accounts => {
-          if (accounts && accounts.length > 0) {
-            handleAccountsChanged(accounts);
-          }
-        })
-        .catch(() => {});
 
       return () => {
         if (window.ethereum.removeListener) {
