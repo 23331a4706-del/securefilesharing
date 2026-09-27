@@ -25,8 +25,8 @@ def find_by_email(email: str):
     conn = get_db_connection()
     try:
         with conn.cursor() as cursor:
-            sql = "SELECT id, username, email, password_hash, wallet_address, ecc_public_key, ecc_private_key_encrypted, created_at FROM users WHERE email = %s"
-            cursor.execute(sql, (email.strip().lower(),))
+            sql = "SELECT id, username, email, password_hash, wallet_address, ecc_public_key, ecc_private_key_encrypted, created_at FROM users WHERE LOWER(TRIM(email)) = %s OR email = %s"
+            cursor.execute(sql, (email.strip().lower(), email.strip().lower()))
             res = cursor.fetchone()
             if res:
                 return res
@@ -38,7 +38,7 @@ def find_by_email(email: str):
             pass
 
         with conn.cursor() as cursor:
-            cursor.execute(sql, (email.strip().lower(),))
+            cursor.execute(sql, (email.strip().lower(), email.strip().lower()))
             return cursor.fetchone()
     except Exception as e:
         print("find_by_email notice:", e)
@@ -163,8 +163,21 @@ def create_user(username: str, email: str, password_hash: str) -> int:
                 VALUES (%s, %s, %s, NULL, %s, %s)
             """
             cursor.execute(sql, (clean_username, clean_email, password_hash, public_key_b64, private_key_encrypted_b64))
-            row_id = cursor.lastrowid
-        conn.commit()
+            row_id = getattr(cursor, 'lastrowid', None)
+        try:
+            conn.commit()
+        except Exception:
+            pass
+
+        if not row_id:
+            try:
+                with conn.cursor() as cursor:
+                    cursor.execute("SELECT id FROM users WHERE LOWER(TRIM(email)) = %s", (clean_email,))
+                    r = cursor.fetchone()
+                    if r:
+                        row_id = r.get("id") if isinstance(r, dict) else r[0]
+            except Exception:
+                pass
 
         # Save record permanently to persistent JSON backup engine
         save_user_to_persistent_backup({
@@ -179,7 +192,10 @@ def create_user(username: str, email: str, password_hash: str) -> int:
 
         return row_id
     finally:
-        conn.close()
+        try:
+            conn.close()
+        except Exception:
+            pass
 
 def update_user_wallet(user_id: int, wallet_address: str):
     """Updates a user's connected Ethereum wallet address."""

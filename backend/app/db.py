@@ -185,6 +185,10 @@ def _init_postgres_tables(conn):
                     UNIQUE (file_id, receiver_id)
                 );
             """)
+            try:
+                cursor.execute("SELECT setval(pg_get_serial_sequence('users', 'id'), COALESCE((SELECT MAX(id) FROM users), 1));")
+            except Exception:
+                pass
     except Exception as e:
         print("Postgres table init notice:", e)
 
