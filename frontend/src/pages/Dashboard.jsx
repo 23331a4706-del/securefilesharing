@@ -574,6 +574,21 @@ export default function Dashboard() {
       // 1. Request permissions & eth_requestAccounts from MetaMask browser extension
       if (window.ethereum) {
         try {
+          // If on HTTPS live deployment and MetaMask is set to Hardhat Localhost (31337), attempt switching network
+          if (window.location.protocol === 'https:') {
+            try {
+              const hexChain = await window.ethereum.request({ method: 'eth_chainId' });
+              if (hexChain === '0x7a69') { // 31337
+                try {
+                  await window.ethereum.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId: '0xaa36a7' }], // Sepolia Testnet (11155111)
+                  });
+                } catch (swErr) {}
+              }
+            } catch (e) {}
+          }
+
           try {
             await window.ethereum.request({
               method: 'wallet_requestPermissions',
