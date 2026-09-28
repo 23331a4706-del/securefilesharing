@@ -56,8 +56,8 @@ def find_by_username(username: str):
     conn = get_db_connection()
     try:
         with conn.cursor() as cursor:
-            sql = "SELECT id, username, email, password_hash, wallet_address, ecc_public_key, ecc_private_key_encrypted, created_at FROM users WHERE username = %s"
-            cursor.execute(sql, (username.strip(),))
+            sql = "SELECT id, username, email, password_hash, wallet_address, ecc_public_key, ecc_private_key_encrypted, created_at FROM users WHERE LOWER(TRIM(username)) = %s OR username = %s"
+            cursor.execute(sql, (username.strip().lower(), username.strip()))
             res = cursor.fetchone()
             if res:
                 return res
@@ -69,7 +69,7 @@ def find_by_username(username: str):
             pass
 
         with conn.cursor() as cursor:
-            cursor.execute(sql, (username.strip(),))
+            cursor.execute(sql, (username.strip().lower(), username.strip()))
             return cursor.fetchone()
     except Exception as e:
         print("find_by_username notice:", e)

@@ -89,18 +89,21 @@ def register():
 def login():
     """
     POST /api/auth/login
-    Authenticates user with email and password, returning JWT token.
+    Authenticates user with email or username/ID and password, returning JWT token.
     """
     try:
         data = request.get_json() or {}
         
-        email = data.get("email", "").strip().lower()
+        identifier = str(data.get("email") or data.get("username") or data.get("id") or "").strip()
         password = data.get("password", "")
 
-        if not email or not password:
-            return jsonify({"success": False, "message": "Email and password are required."}), 400
+        if not identifier or not password:
+            return jsonify({"success": False, "message": "Email/Username and password are required."}), 400
 
-        user = find_by_email(email)
+        user = find_by_email(identifier.lower())
+        if not user:
+            user = find_by_username(identifier)
+
         if not user or not user.get("password_hash"):
             return jsonify({"success": False, "message": "Invalid email or password."}), 401
 
