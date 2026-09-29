@@ -87,7 +87,7 @@ def add_bytes_to_ipfs(encrypted_bytes: bytes, api_url: str = None) -> str:
 
     # 1. Attempt connection to real IPFS Kubo node
     try:
-        res = requests.post(f"{base_url}/api/v0/add?pin=true", files=files, timeout=5.0)
+        res = requests.post(f"{base_url}/api/v0/add?pin=true", files=files, timeout=1.0)
         if res.status_code == 200:
             lines = [line.strip() for line in res.text.strip().split('\n') if line.strip()]
             last_json = json.loads(lines[-1])
@@ -131,7 +131,7 @@ def get_bytes_from_ipfs(cid: str, api_url: str = None) -> bytes:
     # 2. Try fetching from real IPFS Kubo daemon
     base_url = get_ipfs_url(api_url)
     try:
-        res = requests.post(f"{base_url}/api/v0/cat", params={'arg': cid}, timeout=5.0)
+        res = requests.post(f"{base_url}/api/v0/cat", params={'arg': cid}, timeout=1.0)
         if res.status_code == 200:
             return res.content
         if res.status_code in (404, 400):

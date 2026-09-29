@@ -30,18 +30,18 @@
     "id": 1,
     "username": "alice_p9",
     "email": "alice_p9@example.com",
-    "password_hash": "$2b$12$J5qV/fXLo/Uu2jXMULVdeuuD12N33l5xoP3Bl2ePnQwByj7FFHW2a",
+    "password_hash": "$2b$12$rGWxO9DJVVPHvzj/ksWb3OwAdr7euT4NM3TKz32s.dxYYRnzdOUcW",
     "wallet_address": null,
-    "ecc_public_key": "BAb3f7433358ogokKzB7ZtlrguRazQrS8+3BPxMBakJiixayzW7Yaq00oVrznEkBOeoxX/kL2zivYxDvwQqZmYI=",
-    "ecc_private_key_encrypted": "Q79EvL1A3/oRH0RELz7v3bKNcO16ObLDvwbDWWkXR82AwfCoSo9AoFutlut1hFbB8SyaKOvnb5M6wTZN5+10hV3wPYMSpPdZCDV8FI3xJyaTuFPSV8tlCaAvV8xAet3F2+T+VtdQjRbNEQUwrNa4WZEnJALDr9HFz5h68goNue5pK5bLMSH+eEKSA5VrGXtVnT+siSriapSjubuHKCXnbLi6khPvMA=="
+    "ecc_public_key": "BHnm4EzNt/5q7kZE00lRflXpugEQg54vGe/kQfP7KUOt01g5OkBoXmi3WOlZ2FBghmCn7slMCRN3mDdvADA+RbA=",
+    "ecc_private_key_encrypted": "48+jK70aAIWZBcV9BABT7t1Sj6bTg0EgWmx8afz63d1ozFa4BB7IxmsicDHc4V7z5qfqQXnlb9N0qaxrvR+ADN0IrBjSVFDzvq5pQpBSbcayEs7Ii3XiKPM/p3b3WyDdbN9LeGpBj5TLMoSg0P4Iwx/KVg+1jJpJ+tv4x40oZhRki7WVjUG5TijFsLbP+b74SltbEVGKk/x1xFFhMi4ckLNiY/VgvA=="
   },
   {
     "id": 2,
     "username": "bob_p9",
     "email": "bob_p9@example.com",
-    "password_hash": "$2b$12$Mc53G.i4nH2fl.Zk.qZCa.aI8krsEX/XZncDbI6Q3ECiSfmwG.yX2",
+    "password_hash": "$2b$12$DdDVfk9FOEB8rCB0Jxx2kODMFuyHQR8UjlS7gaq6IFbYUNaCIN6zm",
     "wallet_address": null,
-    "ecc_public_key": "BEe2GyCS++cwgqEnnKji1xJ/yJ634Is1uhdZ7JSleoeM0vFPw7iN0vIBQMmtQSdftKLpYuRcpt/Ujualh33Y6SU=",
-    "ecc_private_key_encrypted": "Q22/dSGrxrbOtwgosm+DCfFGZXIf3NHxIu7I/UV3Pqq4as852BwE+pYS3vOlmaF/KSaQBUkOQP6pHP/7PkG+tVvU4NnI5WK6i2taBrUsXBl1rbNmA8SOSXpZB1pS5yG1ETgh3U1UVu8s8WBAVgrlyedJIofR6TdmF7wgNw50HBC9iWdfDrX9HEWBguZLKsBzCOCe7p+0M2Tm0/dKKnR6o8Qe7WAVjA=="
+    "ecc_public_key": "BMkrfS2ey1i7n4oEDG8Lt7kyFBJzKUL/1UdI3jdJBJNhkoX6+uCkEcRMkqBjrbcGJ943VXo5dAswDRUQ7JTKe7g=",
+    "ecc_private_key_encrypted": "2ZF1anRUvbYLHFCEWI0MsGs7t+pqRAf/xImI0L9LyHhLfk4oA2fSX/mlqbUDjA0VH6iCMnSfS+CIauLBQhgBD0phchTewCJd+xPSkNUFg3y42QcFGGdfTjDOud+JXlzgnBYM8kE3hxe0xjnLeUcrbKa1JftG0xKJULWXH37UktxXH24ittvebB68VrTVKwwitJxQuX5oMebPCMquQ+ALLWKg+3nvUQ=="
   }
 ]

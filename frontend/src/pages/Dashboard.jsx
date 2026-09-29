@@ -232,6 +232,7 @@ export default function Dashboard() {
     is_matched: true
   });
   const [decryptedFileIds, setDecryptedFileIds] = useState({});
+  const [downloadedFileIds, setDownloadedFileIds] = useState({});
   const [receiverDecryptSuccess, setReceiverDecryptSuccess] = useState('');
   const [receiverDecryptError, setReceiverDecryptError] = useState('');
   const [isDecryptingReceiver, setIsDecryptingReceiver] = useState(false);
@@ -821,6 +822,7 @@ export default function Dashboard() {
     setErrorMsg('');
     try {
       await downloadSharedFile(fileId, token, filename);
+      setDownloadedFileIds(prev => ({ ...prev, [fileId]: true }));
       setSuccessMsg(`✓ File "${filename}" downloaded and saved successfully.`);
       if (receiverModalFile) {
         setReceiverModalFile(null);
@@ -1563,7 +1565,7 @@ export default function Dashboard() {
                                   }}
                                   title={decryptedFileIds[file.file_id || file.id] ? "Download Decrypted File" : "Decrypt file first to enable download"}
                                 >
-                                  {decryptedFileIds[file.file_id || file.id] ? '⬇️ Download File' : '🔒 Download Locked'}
+                                  {downloadedFileIds[file.file_id || file.id] ? '✓ File Downloaded' : (decryptedFileIds[file.file_id || file.id] ? '⬇️ Download File' : '🔒 Download Locked')}
                                 </button>
                               </div>
                             </td>
@@ -2475,7 +2477,7 @@ export default function Dashboard() {
                     cursor: decryptedFileIds[receiverModalFile.file_id || receiverModalFile.id] ? 'pointer' : 'not-allowed'
                   }}
                 >
-                  ⬇️ Download Decrypted File
+                  {downloadedFileIds[receiverModalFile.file_id || receiverModalFile.id] ? '✓ File Downloaded' : '⬇️ Download Decrypted File'}
                 </button>
               </div>
             </div>
