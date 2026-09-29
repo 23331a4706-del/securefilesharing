@@ -1440,21 +1440,6 @@ export default function Dashboard() {
                                   Manage Shares
                                 </button>
                                 <button
-                                  onClick={() => openManualInspectionModal(file)}
-                                  className="btn btn-secondary"
-                                  style={{ padding: '0.35rem 0.65rem', fontSize: '0.78rem' }}
-                                  title="Generate Real-Time Hash & Manual Decrypt"
-                                >
-                                  🔍 Inspect & Decrypt
-                                </button>
-                                <button
-                                  onClick={() => handleDownload(file.id, file.original_filename)}
-                                  className="btn btn-secondary"
-                                  style={{ padding: '0.35rem 0.65rem', fontSize: '0.78rem' }}
-                                >
-                                  ⚡ Auto Download
-                                </button>
-                                <button
                                   onClick={() => handleDelete(file.id, file.original_filename)}
                                   className="btn btn-danger"
                                   style={{ padding: '0.35rem 0.65rem', fontSize: '0.78rem' }}
