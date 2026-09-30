@@ -34,5 +34,14 @@
     "wallet_address": null,
     "ecc_public_key": "BMkrfS2ey1i7n4oEDG8Lt7kyFBJzKUL/1UdI3jdJBJNhkoX6+uCkEcRMkqBjrbcGJ943VXo5dAswDRUQ7JTKe7g=",
     "ecc_private_key_encrypted": "2ZF1anRUvbYLHFCEWI0MsGs7t+pqRAf/xImI0L9LyHhLfk4oA2fSX/mlqbUDjA0VH6iCMnSfS+CIauLBQhgBD0phchTewCJd+xPSkNUFg3y42QcFGGdfTjDOud+JXlzgnBYM8kE3hxe0xjnLeUcrbKa1JftG0xKJULWXH37UktxXH24ittvebB68VrTVKwwitJxQuX5oMebPCMquQ+ALLWKg+3nvUQ=="
+  },
+  {
+    "id": 5,
+    "username": "komali",
+    "email": "meesalakomali304@gmail.com",
+    "password_hash": "$2b$12$GDe8y5yEqdadTJEyPH64LO7JzyUecb9cWVq4V9f8Wr9mq17CobgRG",
+    "wallet_address": "0x69782ce2fd528c6856fbc0fce3091da5ef3eede1",
+    "ecc_public_key": "BFEdy7DMfxigm3NchRw8vvVKnYHhTgXRb7kTRQmy7F56Hn3Z3Ms3ca3XaL8/G0vVFq6jtk2xUlKHsDvw1tWvWe4=",
+    "ecc_private_key_encrypted": "vay3KrL2mQYkhuYi+PMP81Pkyz8w757kNIsojhjY9t2Oigf8e8o36zPtoTYRTRCN5AsfeTBkKGQSh+pwIBmE5c946pf0rxkBTcpXEFp2eD2cgWw6InpB4POWOj+wR336WbxcnW06l7caStHhyE0uIRDyvVsEHppzkAa0uWZ65qj+TIh6eYVDlt8qtJEdT6zXVBBzBpag/OL289XN3aOmQg5HKugBXA=="
   }
 ]
