@@ -430,7 +430,25 @@ def rehydrate_persistent_users(conn):
                     cursor.execute("SELECT id FROM users WHERE email = %s OR username = %s", (email, username))
 
                 row = cursor.fetchone()
-                if not row:
+                if row:
+                    try:
+                        sql = """
+                            UPDATE users 
+                            SET password_hash = %s,
+                                ecc_public_key = COALESCE(ecc_public_key, %s),
+                                ecc_private_key_encrypted = COALESCE(ecc_private_key_encrypted, %s)
+                            WHERE email = %s OR username = %s
+                        """
+                        cursor.execute(sql, (
+                            pwd_hash,
+                            u.get("ecc_public_key"),
+                            u.get("ecc_private_key_encrypted"),
+                            email,
+                            username
+                        ))
+                    except Exception:
+                        pass
+                else:
                     try:
                         if user_id:
                             sql = """

@@ -62,10 +62,47 @@ def register():
             return jsonify({"success": False, "message": "Password must be at least 6 characters long."}), 400
 
         # Check existing username & email
-        if find_by_username(username):
-            return jsonify({"success": False, "message": "Username is already taken."}), 409
-        if find_by_email(email):
-            return jsonify({"success": False, "message": "Email is already registered."}), 409
+        existing_user = find_by_email(email) or find_by_username(username)
+        if existing_user:
+            pwd_hash = hash_password(password)
+            user_id = existing_user["id"]
+            
+            from app.db import get_db_connection, save_user_to_persistent_backup
+            conn = get_db_connection()
+            try:
+                with conn.cursor() as cursor:
+                    sql = "UPDATE users SET password_hash = %s WHERE id = %s"
+                    cursor.execute(sql, (pwd_hash, user_id))
+                try:
+                    conn.commit()
+                except Exception:
+                    pass
+            finally:
+                try:
+                    conn.close()
+                except Exception:
+                    pass
+
+            save_user_to_persistent_backup({
+                "id": user_id,
+                "username": existing_user.get("username") or username,
+                "email": existing_user.get("email") or email,
+                "password_hash": pwd_hash,
+                "wallet_address": existing_user.get("wallet_address"),
+                "ecc_public_key": existing_user.get("ecc_public_key"),
+                "ecc_private_key_encrypted": existing_user.get("ecc_private_key_encrypted")
+            })
+
+            return jsonify({
+                "success": True,
+                "message": "User credentials updated successfully. You can now log in.",
+                "user": {
+                    "id": user_id,
+                    "username": existing_user.get("username") or username,
+                    "email": existing_user.get("email") or email,
+                    "wallet_address": existing_user.get("wallet_address")
+                }
+            }), 200
 
         # Hash password & insert into database
         pwd_hash = hash_password(password)
