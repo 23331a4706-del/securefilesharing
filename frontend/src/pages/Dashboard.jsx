@@ -452,14 +452,16 @@ export default function Dashboard() {
         const domain = {
           name: 'Secure File Sharing System',
           version: '1',
-          chainId: currentChainId
+          chainId: currentChainId,
+          verifyingContract: '0x5FbDB2315678afecb367f032d93F642f64180aa3'
         };
 
         const types = {
           EIP712Domain: [
             { name: 'name', type: 'string' },
             { name: 'version', type: 'string' },
-            { name: 'chainId', type: 'uint256' }
+            { name: 'chainId', type: 'uint256' },
+            { name: 'verifyingContract', type: 'address' }
           ],
           FileRegistration: [
             { name: 'action', type: 'string' },
