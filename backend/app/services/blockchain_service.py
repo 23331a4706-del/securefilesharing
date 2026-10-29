@@ -83,6 +83,21 @@ def get_contract() -> Tuple[Web3, Any, str]:
     """
     w3 = _get_web3()
     contract_addr = Config.BLOCKCHAIN_CONTRACT_ADDRESS
+
+    # Auto-detect active deployed address from deployment-info.json if available
+    try:
+        deploy_info_path = os.path.abspath(os.path.join(Config.BASE_DIR, "..", "blockchain", "deployment-info.json"))
+        if os.path.exists(deploy_info_path):
+            with open(deploy_info_path, "r", encoding="utf-8") as f:
+                d_info = json.load(f)
+                latest_addr = d_info.get("contractAddress")
+                if latest_addr and Web3.is_address(latest_addr):
+                    latest_chk = w3.to_checksum_address(latest_addr)
+                    if len(w3.eth.get_code(latest_chk)) > 0:
+                        contract_addr = latest_addr
+    except Exception:
+        pass
+
     if not contract_addr or not Web3.is_address(contract_addr):
         raise BlockchainConfigurationError(
             f"Invalid or missing BLOCKCHAIN_CONTRACT_ADDRESS: '{contract_addr}'"
