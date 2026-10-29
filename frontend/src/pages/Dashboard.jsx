@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { ethers } from 'ethers';
 import { useAuth } from '../context/AuthContext';
 import {
   uploadFile,
@@ -439,82 +440,122 @@ export default function Dashboard() {
       const payloadString = JSON.stringify(payloadObj, null, 2);
 
       let resultHash = null;
-      let activityType = "Signature Request / Contract Interaction";
+      let activityType = "Smart Contract Transaction (registerFile)";
 
-      // 3. Execute EIP-712 eth_signTypedData_v4 for native structured logging inside MetaMask Activity Tab
+      // 3. First attempt direct on-chain smart contract transaction (burns gas & mines block on Hardhat)
+      const CONTRACT_ADDRESS = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+      const CONTRACT_ABI = [
+        "function registerFile(uint256 fileId, string calldata ownerId, string calldata ipfsCid, string calldata sha256Hash) external",
+        "function isFileRegistered(uint256 fileId) external view returns (bool)"
+      ];
+
       try {
-        let currentChainId = 31337;
-        try {
-          const hexChain = await window.ethereum.request({ method: 'eth_chainId' });
-          if (hexChain) currentChainId = parseInt(hexChain, 16) || 31337;
-        } catch (e) {}
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const signer = await provider.getSigner();
+        const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
 
-        const domain = {
-          name: 'Secure File Sharing System',
-          version: '1',
-          chainId: currentChainId,
-          verifyingContract: '0x5FbDB2315678afecb367f032d93F642f64180aa3'
-        };
+        const fileIdNum = Number(payloadObj.fileId) || Date.now();
+        const isRegistered = await contract.isFileRegistered(fileIdNum).catch(() => false);
 
-        const types = {
-          EIP712Domain: [
-            { name: 'name', type: 'string' },
-            { name: 'version', type: 'string' },
-            { name: 'chainId', type: 'uint256' },
-            { name: 'verifyingContract', type: 'address' }
-          ],
-          FileRegistration: [
-            { name: 'action', type: 'string' },
-            { name: 'fileId', type: 'uint256' },
-            { name: 'filename', type: 'string' },
-            { name: 'ownerAddress', type: 'string' },
-            { name: 'fileStatus', type: 'string' },
-            { name: 'accessPermissions', type: 'string' },
-            { name: 'ipfsCid', type: 'string' },
-            { name: 'sha256Hash', type: 'string' },
-            { name: 'transactionHistory', type: 'string' },
-            { name: 'timestamp', type: 'string' }
-          ]
-        };
-
-        const message = {
-          action: "REGISTER_FILE_SHA256",
-          fileId: Number(payloadObj.fileId) || Date.now(),
-          filename: payloadObj.filename,
-          ownerAddress: ownerAddr,
-          fileStatus: fileStatusStr,
-          accessPermissions: accessPermStr,
-          ipfsCid: payloadObj.ipfsCid || "",
-          sha256Hash: payloadObj.sha256 || "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-          transactionHistory: txHistoryStr,
-          timestamp: new Date().toLocaleTimeString()
-        };
-
-        const typedData = JSON.stringify({
-          types,
-          domain,
-          primaryType: 'FileRegistration',
-          message
-        });
-
-        resultHash = await window.ethereum.request({
-          method: 'eth_signTypedData_v4',
-          params: [fromAddr, typedData]
-        });
-        activityType = "Signature Request (EIP-712)";
-        console.log("✓ MetaMask EIP-712 Signature Confirmed & Recorded:", resultHash);
-      } catch (typedErr) {
-        if (typedErr.code === 4001 || (typedErr.message && typedErr.message.toLowerCase().includes("rejected"))) {
-          throw typedErr;
+        if (!isRegistered) {
+          console.log(`Sending on-chain transaction to register file ID ${fileIdNum}...`);
+          const tx = await contract.registerFile(
+            fileIdNum,
+            String(ownerAddr),
+            payloadObj.ipfsCid || "QmEmptyCID",
+            payloadObj.sha256 || "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          );
+          resultHash = tx.hash;
+          activityType = "Contract Interaction (registerFile)";
+          console.log("✓ On-chain transaction submitted! Tx Hash:", tx.hash);
+          await tx.wait(1);
+          console.log("✓ On-chain transaction mined into block with gas deduction!");
+        } else {
+          console.log(`File ID ${fileIdNum} already registered on-chain.`);
         }
-        console.warn("eth_signTypedData_v4 fallback to personal_sign:", typedErr);
-        const signMsgHex = "0x" + Array.from(new TextEncoder().encode(`Confirm & Sign SHA-256 File Registration:\n${payloadString}`)).map(b => b.toString(16).padStart(2, '0')).join('');
-        resultHash = await window.ethereum.request({
-          method: 'personal_sign',
-          params: [signMsgHex, fromAddr]
-        });
-        activityType = "Signature Request";
-        console.log("✓ MetaMask Real-Time Signature Confirmed:", resultHash);
+      } catch (txErr) {
+        if (txErr.code === 'ACTION_REJECTED' || txErr.code === 4001 || (txErr.message && txErr.message.toLowerCase().includes("rejected"))) {
+          throw txErr;
+        }
+        console.warn("Direct on-chain contract transaction fallback notice:", txErr);
+      }
+
+      // 4. Fallback to EIP-712 / personal_sign if on-chain call was unavailable
+      if (!resultHash) {
+        try {
+          let currentChainId = 31337;
+          try {
+            const hexChain = await window.ethereum.request({ method: 'eth_chainId' });
+            if (hexChain) currentChainId = parseInt(hexChain, 16) || 31337;
+          } catch (e) {}
+
+          const domain = {
+            name: 'Secure File Sharing System',
+            version: '1',
+            chainId: currentChainId,
+            verifyingContract: '0x5FbDB2315678afecb367f032d93F642f64180aa3'
+          };
+
+          const types = {
+            EIP712Domain: [
+              { name: 'name', type: 'string' },
+              { name: 'version', type: 'string' },
+              { name: 'chainId', type: 'uint256' },
+              { name: 'verifyingContract', type: 'address' }
+            ],
+            FileRegistration: [
+              { name: 'action', type: 'string' },
+              { name: 'fileId', type: 'uint256' },
+              { name: 'filename', type: 'string' },
+              { name: 'ownerAddress', type: 'string' },
+              { name: 'fileStatus', type: 'string' },
+              { name: 'accessPermissions', type: 'string' },
+              { name: 'ipfsCid', type: 'string' },
+              { name: 'sha256Hash', type: 'string' },
+              { name: 'transactionHistory', type: 'string' },
+              { name: 'timestamp', type: 'string' }
+            ]
+          };
+
+          const message = {
+            action: "REGISTER_FILE_SHA256",
+            fileId: Number(payloadObj.fileId) || Date.now(),
+            filename: payloadObj.filename,
+            ownerAddress: ownerAddr,
+            fileStatus: fileStatusStr,
+            accessPermissions: accessPermStr,
+            ipfsCid: payloadObj.ipfsCid || "",
+            sha256Hash: payloadObj.sha256 || "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            transactionHistory: txHistoryStr,
+            timestamp: new Date().toLocaleTimeString()
+          };
+
+          const typedData = JSON.stringify({
+            types,
+            domain,
+            primaryType: 'FileRegistration',
+            message
+          });
+
+          resultHash = await window.ethereum.request({
+            method: 'eth_signTypedData_v4',
+            params: [fromAddr, typedData]
+          });
+          activityType = "Signature Request (EIP-712)";
+          console.log("✓ MetaMask EIP-712 Signature Confirmed & Recorded:", resultHash);
+        } catch (typedErr) {
+          if (typedErr.code === 4001 || (typedErr.message && typedErr.message.toLowerCase().includes("rejected"))) {
+            throw typedErr;
+          }
+          console.warn("eth_signTypedData_v4 fallback to personal_sign:", typedErr);
+          const signMsgHex = "0x" + Array.from(new TextEncoder().encode(`Confirm & Sign SHA-256 File Registration:\n${payloadString}`)).map(b => b.toString(16).padStart(2, '0')).join('');
+          resultHash = await window.ethereum.request({
+            method: 'personal_sign',
+            params: [signMsgHex, fromAddr]
+          });
+          activityType = "Signature Request";
+          console.log("✓ MetaMask Real-Time Signature Confirmed:", resultHash);
+        }
       }
 
       if (resultHash) {
