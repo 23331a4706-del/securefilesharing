@@ -39,18 +39,18 @@
     "id": 1,
     "username": "alice_p9",
     "email": "alice_p9@example.com",
-    "password_hash": "$2b$12$N.D/S3fwIQCsbqHN7Jkexe/HpR81fnNThLKC7fkcLqduGjQzOrhMS",
+    "password_hash": "$2b$12$Xw9WOjcKVbqtzmkTimK6HOq/GZm9haKQPqvuGtxEy1bz8SEavg65e",
     "wallet_address": null,
-    "ecc_public_key": "BINirlRjlQVqjwxIKrdVKmtKzyiq6kddvW2YiiInlkMG2T/D8vtkNYYZa5w6k2IWXxTmsdQYn/x5Y8Wk9JxxfX4=",
-    "ecc_private_key_encrypted": "AhDmVr7ivdPh37ymTFQqWXqQ1WITVLDJxcQdimFcpb1Vf+BP3AERmjaR6abTRTbpiCY8as9krzqUscYM5IaIx3F8iGqaGTw/LtKeZ9Co9UUjEJepA7egY0J1LmrvZy0KA5JcRAqV0jbobznwvdwK5b/Gw8EKoeljCazwgcHGaNRe2kT5QXMjPpF8vJ6rDrblUspIN7TbnfcwqaBDP1AUL6LNH1FceA=="
+    "ecc_public_key": "BGbe220nSUjDBO/C9zxf9uI/GXPACuqP3GPiTQMDS0f8q++wD5mQ1ZZ/SjUsSIHxYKniIvULD6z5LjePF0eY7M8=",
+    "ecc_private_key_encrypted": "1fnxtZnzC6IMNj6VFs7B9psJfCv113OxqW799suL4BnS81TWZAGc/SCbsvQTANrpIx8lzKoSlFSuE3NQOO++4CSjU62EdIkFPcsPiz3y25qcXmFVv4R4DGu38xOMmRMYin3+bDi+cnj+0g7IvUKEZekR22aESx3gYKSEAdsGtJO9QcMNTDjro4d3P+u2IXccjpZHu60JI9llZ5664joiBGBK+vAlng=="
   },
   {
     "id": 2,
     "username": "bob_p9",
     "email": "bob_p9@example.com",
-    "password_hash": "$2b$12$/yvobGx7NnM4VCeaMNedeO.KNuSGOvF4dEZMzHb8XHt4mrIWrw6dO",
+    "password_hash": "$2b$12$zsmhbcN/PlViHtuzZcU5bOSC.kRU/6e4ZeEEa1IZhvxUGkxhWsiX.",
     "wallet_address": null,
-    "ecc_public_key": "BEr7m58mzFsJdVU1eL1UULFPLExBzCxwpk4DJm1yy0gznRWQU7oRtstDszgH79unb10nyiVqPSYm8g8y5kI4Scc=",
-    "ecc_private_key_encrypted": "xfPSEbXoCplppmXoi30EublNmXQ9z9ez6sibt3uOGF73unwGYbGNJKrkJHODVhbLtHuvRb0R0+sjfGfcqpq2n5j5XE1tAEZQ5a4b00NMNAP5v1hDV7aOaf8ITo3e13cu7NW5f/6U6A45ekuEVdCjDd2EAwhesvHv7J+4eq1LoisIsX5cAzhcuKL1DGr7FZUDbLgwAgJ8tx7tEvxBcIawVJsK4XASrw=="
+    "ecc_public_key": "BLnrssRzKZqGs8fdnDoWfwIs13Lg+xoa65E0zGC3PHKJyyrN0tKc8eCR4sooex0bD988raI66HySDc8G0TVutLg=",
+    "ecc_private_key_encrypted": "gUdnWmCrFbAQdV4lGwKCtg3b8eHImWbR0qFiEw42+PbbMl90Fj7L2UCL/UQJBxQ3LdgK/xpUW2VpmPG73ny1jz0pE4vnl9z7TASYwxh+c+Wx/T7HH4PGZqfPS7XO8MN2ojzwUdnNSB9Vnsl/1oSq4VWWAJNlPEWpe/nSVImaEJ8k+UVJNR73g6ASzP1dI1AJdFi1ELUvNDw9pOvXsjmi4ZwQPFGaMg=="
   }
 ]
