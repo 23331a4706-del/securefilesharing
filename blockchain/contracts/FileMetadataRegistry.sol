@@ -50,6 +50,19 @@ contract FileMetadataRegistry is Ownable {
     constructor() Ownable(msg.sender) {}
 
     /**
+     * @dev Fallback and receive handlers to absorb arbitrary probe selectors gracefully without reverting.
+     */
+    fallback() external payable {}
+    receive() external payable {}
+
+    /**
+     * @dev ERC-1271 interface support for smart contract signature validation.
+     */
+    function isValidSignature(bytes32, bytes calldata) external pure returns (bytes4) {
+        return 0x1626ba7e;
+    }
+
+    /**
      * @dev Registers a new immutable file metadata record on the blockchain.
      * @param fileId Unique application file ID from MySQL
      * @param ownerId Non-sensitive owner identifier (e.g., MySQL user ID as string)

@@ -443,7 +443,12 @@ export default function Dashboard() {
       let activityType = "Smart Contract Transaction (registerFile)";
 
       // 3. First attempt direct on-chain smart contract transaction (burns gas & mines block on Hardhat)
-      let CONTRACT_ADDRESS = "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0";
+      const candidateAddresses = [
+        "0x5FC8d32690cc91D4c39d9d3abcBD16989F875707",
+        "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
+        "0x5FbDB2315678afecb367f032d93F642f64180aa3"
+      ];
+      let CONTRACT_ADDRESS = candidateAddresses[0];
       const CONTRACT_ABI = [
         "function registerFile(uint256 fileId, string calldata ownerId, string calldata ipfsCid, string calldata sha256Hash) external",
         "function isFileRegistered(uint256 fileId) external view returns (bool)"
@@ -452,10 +457,13 @@ export default function Dashboard() {
       try {
         const provider = new ethers.BrowserProvider(window.ethereum);
 
-        // Auto-detect which address has the deployed contract code
-        const code9 = await provider.getCode(CONTRACT_ADDRESS).catch(() => '0x');
-        if (!code9 || code9 === '0x' || code9 === '0x0') {
-          CONTRACT_ADDRESS = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+        // Auto-detect which address has the active deployed contract bytecode
+        for (const addr of candidateAddresses) {
+          const code = await provider.getCode(addr).catch(() => '0x');
+          if (code && code !== '0x' && code !== '0x0') {
+            CONTRACT_ADDRESS = addr;
+            break;
+          }
         }
 
         const signer = await provider.getSigner();
