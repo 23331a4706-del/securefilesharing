@@ -37,20 +37,173 @@
   },
   {
     "id": 1,
+    "username": "alice_p2",
+    "email": "alice_p2@example.com",
+    "password_hash": "$2b$12$U5mPhGm4A7t1ZiYJvA5fJO8nTBzYeM5XO61PaYbMLCrgvdSs3nkVi",
+    "wallet_address": null,
+    "ecc_public_key": "BG+A6POcv7dPuoDPwJ6uV4i6aSVj7m8J+w0IGdzDx2i0nY95eAZvmBiLmnmwcEZDc1qb6OXuUdrmUxhxFsQQxYg=",
+    "ecc_private_key_encrypted": "zv6eX8W+E2QLzX8/zwwwEL9NKCd7OWlePW+QhS8aZ1RW1uye1DoEJQJTkXVe68lltSj0c5kJTZBb5SB7iyZnKepxhoB6Ie1YRAkS3DyL/bNwWvCimdvzfjnObk8eutpPQzSkfbHV74H+O/7VXPog/LAGTFb9G6MrwyYw8O6C/yk7ESnU6tSqALDtzr966xHjvImDQPkMwGhJQ/920UP0+iVp44M5JQ=="
+  },
+  {
+    "id": 2,
+    "username": "bob_p2",
+    "email": "bob_p2@example.com",
+    "password_hash": "$2b$12$kRlPi0uS7sNKp1HGB0aPmuxZrihtVGt3IiWcJbn6XAJ505/2H1QAC",
+    "wallet_address": null,
+    "ecc_public_key": "BNt1OU9u2Z8l98jxq+Zol+uzghN2O1zmcBPIbmCSByyHzl282isaL7Yvg4US/lU+dSfpbmrzAEqV5hWDqm3DqGo=",
+    "ecc_private_key_encrypted": "JwSa8H2u0N7wILnKvv12RvAXVVQ1vbpvO25TKi7W8FYsyegzCYBFiK/s4fBNAvth9rq7cIQiHSXKxJm13lpC9EhUs7iAb4t78b3Zl03ZDzYlIsNxbY0OhGisQMi4kaxgQ/i24QFFWk23kdG4opv3vNWks1vLUaPSuKKvgMsPFh3nnfJhg83rWwDWHtebu57mLt570DK9wH04wI90XTRiT2GA/SB6Zg=="
+  },
+  {
+    "id": 1,
+    "username": "alice_p3d",
+    "email": "alice_p3d@example.com",
+    "password_hash": "$2b$12$.5i/MBUPgGmMYzt7ELl3lOjWsXyF5g9FMshAYxK9OuuSMDBnnycLu",
+    "wallet_address": null,
+    "ecc_public_key": "BJP4hpQVg2gcEWK1df2YAZ8cKrsYHbN6jUStUL/GRt672de5t8qTbv6vf3p6vxwHIR8XA4TxIEt6f6qSHg60x0E=",
+    "ecc_private_key_encrypted": "zlWIh/x7bK4Jn/7J/gaou1JsDgJilTUusqgz3ASyjcMzFmpfYRzx3gmBVUNg4LjyBrnj4/+EMlMA4pn9NN6u2jJML0d5sxJNhTeR2Zav+yV9TB3eT40JDeMXh7+F8JcErRyZODhrsw/DvYIElbvEURXFtWbE5pH98CQblDgeyNPi9pKFCcNp6MH5g+JfIEC/XwYeSk/29+OvnM5NBlSLE50ANs2fdg=="
+  },
+  {
+    "id": 2,
+    "username": "bob_p3j",
+    "email": "bob_p3j@example.com",
+    "password_hash": "$2b$12$W7vUMxDxbFGslXvfrmiYu.ONkKRA7xRa..D7/lQ/ORE/kNLO.ksK2",
+    "wallet_address": null,
+    "ecc_public_key": "BAzwmUPbh4V6t+wKqrFJPALb7AzdPjmvY0HdOBkGhb2OaUVvC6dzCdZAlireRpboBqv290DLoKsskWNYuuILFRs=",
+    "ecc_private_key_encrypted": "RggrGlAjbQhbxhTf4OGDor6mbe6LeYe/xYmNWs+JkT8vSkzt2dos/7vJ5AxHx0cE/5zi/ybc2G1tGk/zHM66uoEaZswbtKX9LRn98W4Xkv8o/A/f7KGgAHdV/KhfdO9cbv+vCeb11oCklNzs6mzoT6klO4iwrToteChhoLumSezqPvCfiMMYPPBn+D8lVfS4nmZqXYmaqCmFAIVnPEO44lDLU/pgsQ=="
+  },
+  {
+    "id": 1,
+    "username": "alice_p4",
+    "email": "alice_p4@example.com",
+    "password_hash": "$2b$12$fSJnOqxevW17IW2BJqchVuudwbVmDalpG7lMYE3lYYGZuaYauaPKe",
+    "wallet_address": null,
+    "ecc_public_key": "BMRq4vJbJ00ZiS7PrFQA4TmjuN+iLVa0N12uOppaIBztoyWzhlhz+da0Agw4YaKj1nYICCbGMubf1pMy2CWTzZ4=",
+    "ecc_private_key_encrypted": "dGmlNX5l1ZAHhLgSrkLFIl0BmNlFquCbgYwezqDLICYRLlciDlOu3Yd0wBnW9C8+PeuFjO0XbGYtVwkueYsMNGD/GvL+SMo2EzqqAzKBT4qaTvXH6nXWPvPdH4Kb3Jjj39Wu4zG69n67sr19qP8A7FZNHa3/SmrdhVQHKHQEWgFIM9udNmsH+nIy5jIpf1JFSIKkR67nDDGWEiV6W1rpKiXNq2iucg=="
+  },
+  {
+    "id": 2,
+    "username": "bob_p4",
+    "email": "bob_p4@example.com",
+    "password_hash": "$2b$12$k.SZ4L4HLdRj/UZFlbLwIuw49q/3oQyS4u8lOpCiyGBD.738GiB2K",
+    "wallet_address": null,
+    "ecc_public_key": "BL2PLCdNzT8EicjAeGoacs8Jnd9MGsq8i1/80lHn0g1x/qWQVd975glPQQscDOOvLY1vqX+a1dNRHwyHo5VrUGE=",
+    "ecc_private_key_encrypted": "iEOOOQ9WnpZw3w1gxddmrH+ydR95yMBXK9vceBiB7UERmmgxBHvXWsBeUYPZXzcMpznEIWHxDGboh7tFCw533ZXclQoXLFjTNBpdLHSmlPiQSZvqIyghKDT8VpTq0nBKrOSbtokgdD7IXLzxDCa3FqTZesNmDDszMYvHoy7YLdFuesdzJEFNSQeEURQOnDmVtI+nNhflBwEt5C1xmRK2Epj8+5C1GA=="
+  },
+  {
+    "id": 1,
+    "username": "alice_p7",
+    "email": "alice_p7@example.com",
+    "password_hash": "$2b$12$8VmUi657VE6DF.nR2K8aFudnnAcwoip00kfFbLc14bhmTfCAKtvU2",
+    "wallet_address": null,
+    "ecc_public_key": "BEd/laHptwvzi50w+LrYYMZhiWOmPUgOuvEswzlG6xdekiJq7J3rz2MN6u7ki9IpyO0Nun75hp4nAN6zk+kKm54=",
+    "ecc_private_key_encrypted": "nfaZZ46tRNFJiL0pUEdl5Z2HPE9uiKp+IpIPK4Fv7muyvnCTPgiNDkkjbtV5oX7JzXrXuSMxzRF3NFkWnKRXCRCGmkuFrfil4X9ZF64D2aMXboGODenWtY62jTadldTajk/7IRt2srVKCFKbCqqINkHOGsEpRJV+rFLtIsfEJ4kYAylqs8T91KmqRTOjmYDW9uTPQqd99+VTKvYx0wCoJdPBQQcHDA=="
+  },
+  {
+    "id": 2,
+    "username": "bob_p7",
+    "email": "bob_p7@example.com",
+    "password_hash": "$2b$12$MAR1lCDFEis8H00vzMGfH.wIZH9eW0zoUPFmSuogabDPY2HtX9B52",
+    "wallet_address": null,
+    "ecc_public_key": "BDvIf1mbm3F1Th4oFOvq4AmKBJq4KlO1p6lKrJ595sld4C798Z6hI/2bOGQNh95sE2Nc6MTUVWOalr24kOs7Dds=",
+    "ecc_private_key_encrypted": "KO9DRNIaPyyhLK5WT75TP0ML7L2jBwSEynbgxk37mtAFPefqbh3OYtsWMXmSZDpnKjNWt7rcDPkdpcnrIOwZRQGxh+EpfwKV90phiHz0H63CXhME6InmQhSXCs4ilh3xYlIwiV148h9ll4nkGkpkVMYRMKt1sG+BbxjixaeV3CCW85M1gRCsThEGsI8PdI4i4ULhuSa+1syRwGRSyUKwCCsKktGeGA=="
+  },
+  {
+    "id": 3,
+    "username": "charlie_p7",
+    "email": "charlie_p7@example.com",
+    "password_hash": "$2b$12$9x5b1fx7cJqia6FuYfDjiOilWayMjcwUe0AebK/tjC41EYWs1dnUu",
+    "wallet_address": null,
+    "ecc_public_key": "BE8ptc1wCWrrj4qqPjxupS3IW5W9Ep7QW3n8zBwDbXLHH0dO9f3pYshfjkF09DO8Z4z9xkQVzbgQhGms2sDrpTk=",
+    "ecc_private_key_encrypted": "Q/6Lwu314IBZ3x2K20ygp16OfDqyp3w7nCyTCfj2RTVEt2c4D/B/urg40nInkBOvPglLLMEuJwsUmy/gBM79DWWNXa1d6YXOceXpgrOz3eYqE0bnALfmizWXGZIADtZrZ9yOiiRqtMBk4kULgCv4JFk3yJ8cNg+Mg49Wh8dK/lpjv3WztQRo8Z5jun8KvCOfD6/4gt66PTJrDPd30PG7W7TnRLatFA=="
+  },
+  {
+    "id": 4,
+    "username": "david_p7",
+    "email": "david_p7@example.com",
+    "password_hash": "$2b$12$lqhV5GX2robXMvRd6QDCsONRFWmg8MECN6idaFIlHBcZsii7MZvBK",
+    "wallet_address": null,
+    "ecc_public_key": "BD9cnlNcBPpLxIbnIDydxKI2b6kC17d89l7EWqQmSFstHRdqOzEy/+yI4shwIwXY8PcXk7zv58vQKAdT2BikLFw=",
+    "ecc_private_key_encrypted": "22JPtHZysXhY3C8zs6WYo56K1esbY3TPyJb/GIXI1crf8EI2Q3SeAw+hyBJ0ZFOQW4ThQvqDQODdw5pUoZqBMftr/2Hx7wCWFUqlwTg/ku2FAu7k4sZlq5x9zUIZTU4nE4k3i/rlHa6L1Qx7pwTFxieJSjY+hP/PMix9VreDQ99iCmuDPpMPAduVM6Is7HQZIJLeLXpPXchUcF6i8YrQVBjUx5B8ig=="
+  },
+  {
+    "id": 5,
+    "username": "eve_p7",
+    "email": "eve_p7@example.com",
+    "password_hash": "$2b$12$3gghdAcyz4NqlvmFtKL3JO6VeJaeFxCu8S7tkMKp.xs74TwD.Sa5e",
+    "wallet_address": null,
+    "ecc_public_key": "BNAXq4fD04VLvLNb9YSRWLEe8rSPYi9N69kN+RT12695/Uaw+kMB3iNRGlcL3DPkw87lqPET5VjXwqTKAsZC7fA=",
+    "ecc_private_key_encrypted": "SQhoCjP0gUTRpddY6PvAEhFCCvmoXa7l8jKGXq4SJoY1x5Y22QAdXM0TSruwmyA3jg1mDpCz88uvnj1QOuKqY8fDW0UC4Y6EC3/ck5XfMkxglIk6wuuW75l1ect9dJqF4Xwiao5Nokj9OIsssXQJw8plyLJ5ZHY2I8iLiW8MAodhwlzlEXt9fqmTawPC5yOPZTySbuKRhUO6pYKb71KkmDgGXkteug=="
+  },
+  {
+    "id": 1,
+    "username": "alice_p8",
+    "email": "alice_p8@example.com",
+    "password_hash": "$2b$12$vAnfs5fk9zwibpO6PAviDuMUydPlBDFIHVFFOXC5FukLDfbGNuD6y",
+    "wallet_address": null,
+    "ecc_public_key": "BAjP9E2HSBRVZGKKes5ZHg0hDmSg/5ZVk/B23ABfpbasJ+GKi2e9CVH65alkHZhl/pFnTWl9/r1zbYTtIlkGfbY=",
+    "ecc_private_key_encrypted": "VDnZStT5XgLT6pL490/IyzAfMVr6Th6RPVlFAEHc8qYWY3frjxwW5ZvfEpWZMWZ7/5Q9N5r0+8RikNDoS6dx6Pzuvg/NJ04cXmoNfNvOZnLT+K6xtHykU860Jf0l4CQAuHjb+0FOrdTkD0T2+YaEb7z+LErL8i19HeQ79OvMFhsKLWbH35X28DD9Aq19mhraTqx7b5A2yBDq5uGbzplGPOuIJX7cEA=="
+  },
+  {
+    "id": 2,
+    "username": "bob_p8",
+    "email": "bob_p8@example.com",
+    "password_hash": "$2b$12$d.axm00X4zoYD/pwmBQQ2.Xgw8t/QtfU8WKkQTk7YCHG8jD.MD1A.",
+    "wallet_address": null,
+    "ecc_public_key": "BMu2a2g+VeJdwbtS3/0vJG+yYFu7ZT8YHX0Eigy/Kb0g+yaGXxNNS0DPulQMUgEMHeH9CBslg50zQWW914kJqYE=",
+    "ecc_private_key_encrypted": "D7878yQSP9f4ZAQtsGO2to8QjMm+Y9zAUIVG5O+0/qNXOdyO4Zk/mEWSWGhdBr8pV17CexdGtrbHuFlOr4IDwGQD1YaHI9g6xE8oLBl7vcl76Zb+hOVb//eKhlqp1wvdECXUkqrYemzjbrF4WK086e4YFumzVmCrFbxqnBP4TsMNEqogbCcmg8TIPHHuS+5Hi/Vua/Vx7aM4qx1/lFTdtVO5GLhogQ=="
+  },
+  {
+    "id": 3,
+    "username": "charlie_p8",
+    "email": "charlie_p8@example.com",
+    "password_hash": "$2b$12$I/jvrreGuXIZTiH/3E1Qz.iLpC6CVpkbTE6WT1zgiHD4sCpZ7M9zK",
+    "wallet_address": null,
+    "ecc_public_key": "BFA/1msrJU2zK1u+yLlHMOBagwSLTiGW+HIJNcZUacdrVclwNaciaPEvFcWHpgE40jeK1i7P/wDmwcPyunIrnO8=",
+    "ecc_private_key_encrypted": "5G7xuAwviADG5mEAc3q+91l5hJvoa8OVpe5K6zUfIh3tK9mauQmcaI1RneS9g2MQqEcz3qAbFG5ibjz9q+xGI90gS9SiRtEOH4FoBh5RZqCexHlkOYQZfvj74mvTHj2WR6Bs+xjesjOX6BsIQIVIUi59tX6C9ZRa5FTuwKWV0uiSN00R0XIF4LS8Zy7tgEdciVlLHsOix3pFRnp7hV/XQ5RgiNYLew=="
+  },
+  {
+    "id": 1,
     "username": "alice_p9",
     "email": "alice_p9@example.com",
-    "password_hash": "$2b$12$Xw9WOjcKVbqtzmkTimK6HOq/GZm9haKQPqvuGtxEy1bz8SEavg65e",
+    "password_hash": "$2b$12$8Y6AX33ADIR.8VOXGwwoUu3n8AkCXapdNaBgO/oF8zakGQ0QXspZy",
     "wallet_address": null,
-    "ecc_public_key": "BGbe220nSUjDBO/C9zxf9uI/GXPACuqP3GPiTQMDS0f8q++wD5mQ1ZZ/SjUsSIHxYKniIvULD6z5LjePF0eY7M8=",
-    "ecc_private_key_encrypted": "1fnxtZnzC6IMNj6VFs7B9psJfCv113OxqW799suL4BnS81TWZAGc/SCbsvQTANrpIx8lzKoSlFSuE3NQOO++4CSjU62EdIkFPcsPiz3y25qcXmFVv4R4DGu38xOMmRMYin3+bDi+cnj+0g7IvUKEZekR22aESx3gYKSEAdsGtJO9QcMNTDjro4d3P+u2IXccjpZHu60JI9llZ5664joiBGBK+vAlng=="
+    "ecc_public_key": "BEFw4i8WSloMaC3cftEz2brVbp3PF9BYEq9ggz1WPu7D4wGEJbiikRyzUpcmofmANItExnx5Uu0jJumdEP7e32w=",
+    "ecc_private_key_encrypted": "TBW4okMvVsCSZnIjNUYiMWpY4/mKvECeE6KnBJxESq2LT+f18sSglX9spXSUPyKP64Jjzj1FeGhwgM5iPePpr7KKCMiVnKE0DIUmgEQ+8MEiAkphawPca7dV8JzJU7+PY6Qt+H1bHAeyqfizgGqZ4un9oy+Z/2je2oK+O1yHYbPfFRK3EoQ+kd8ccaoMp+nRg0h6VmEKbs7hN5CkvWFybYy2/lckog=="
   },
   {
     "id": 2,
     "username": "bob_p9",
     "email": "bob_p9@example.com",
-    "password_hash": "$2b$12$zsmhbcN/PlViHtuzZcU5bOSC.kRU/6e4ZeEEa1IZhvxUGkxhWsiX.",
+    "password_hash": "$2b$12$hF9MA.6M8z4MzRXBQUXTdeQfrLP6f9UyLA3RjAIJ1/OV9LJCNYqLe",
     "wallet_address": null,
-    "ecc_public_key": "BLnrssRzKZqGs8fdnDoWfwIs13Lg+xoa65E0zGC3PHKJyyrN0tKc8eCR4sooex0bD988raI66HySDc8G0TVutLg=",
-    "ecc_private_key_encrypted": "gUdnWmCrFbAQdV4lGwKCtg3b8eHImWbR0qFiEw42+PbbMl90Fj7L2UCL/UQJBxQ3LdgK/xpUW2VpmPG73ny1jz0pE4vnl9z7TASYwxh+c+Wx/T7HH4PGZqfPS7XO8MN2ojzwUdnNSB9Vnsl/1oSq4VWWAJNlPEWpe/nSVImaEJ8k+UVJNR73g6ASzP1dI1AJdFi1ELUvNDw9pOvXsjmi4ZwQPFGaMg=="
+    "ecc_public_key": "BDxu42SmFFRGihWOtBZBtu7Y9bubfK3zkFyzGH1zFquzD9DEF4mMfXE6nH8triM12oib84V3tCBGsRz6/dVTptE=",
+    "ecc_private_key_encrypted": "yYPuvTvoAMPkK6TzRB1x9Ddou8FHoqyHhR3200sxLn33JdvN2pCzzm2JpcMl8V0BTvAQYRbr8VUiH3PrUt94Qp/KmlU1bjFObvf+gQPcLGjO08Djh/fEHkaMKZSK6tXFlxBgos1ph+jt+DJNTO6c8KJsDJ1fm6CXnib0m8Q3ZnaTcaUqyY9FQZboEkmcOwFwG24IrFOmpyMQItk33YEG7BLwh2l6Fg=="
+  },
+  {
+    "id": 1,
+    "username": "alice",
+    "email": "alice@example.com",
+    "password_hash": "$2b$12$Vm8JEPrWSEYysK1qy4dYw.9DpaU4TXvj5X8.IPmvxTwpTdvzZEZDm",
+    "wallet_address": null,
+    "ecc_public_key": "BJRQT0V8SqdWGXzY3DSm2mryUl1oink4zD10tz02jeFJOr8pQz+vE8FCg62HZq6dnxYnpNzSkknG/POfBp5fqg8=",
+    "ecc_private_key_encrypted": "apy5gWboQpoO5DJPmqawA3kshPVhuV86X7Jt+JPSN6LA+Tn0oImaSxerNMrGaZ8RQ1oZ3/ZtEtquMgsQY2egCRUCqQh+ReOxZFEsIIxrcQ1N/FufxVSCQdPlQ7C7ArDeWraO7dsXuEsZzm6UorHEd+64fZW0dv9jZuuGmxIWY1w0EDZ2u8h6Paua3KeDQW3AkY9GiSdNYnBBNTLzEkhllNRtHp11UA=="
+  },
+  {
+    "id": 1,
+    "username": "phase6_alice",
+    "email": "alice_p6@example.com",
+    "password_hash": "$2b$12$gYuqnW9jZnW2zbaKpxZvWud4nNGHIs8V8yAqkHtC2UiEzehcFQUH.",
+    "wallet_address": null,
+    "ecc_public_key": "BEFAPwWeDfNp36wYU5/8I/WRM66atKv6dtETtjRFRtNeo6qhuQnV1sHjxNZZma8+nlHiFdxL4aJ/RtbNiVrZbHY=",
+    "ecc_private_key_encrypted": "tv6HbiyNf+eMALWIBe+Wx6Nb9GtqWn5Z5HMF5r9idxpkTiK7HwD5RHltDQi5cUUHmWSF3Eafn91gVtP+v6BkJlNyjloxJb2sWo3/TO8LG1Y2boEBRLozjCv9dCN+a9Gp4eHCyYKYqg78dXQICy2d7oFgY3DlR4Azmb41c5e2Xyde3VQd138epSxwGsdFVIzKRd6rwombcrb7usPnL01/WQnPCZ2eMw=="
+  },
+  {
+    "id": 2,
+    "username": "phase6_bob",
+    "email": "bob_p6@example.com",
+    "password_hash": "$2b$12$WdSJV5mkESFaWyPimhYJX.EdnsCjrqkVADPXVyiKkGiMFCyNJn0/q",
+    "wallet_address": null,
+    "ecc_public_key": "BNCY6TVinhMqv0L5K3XZJ1JGzx0Z6Duk3n36wYzB14qwkhy2VcmBDSFq4W/CwuVAjA6skBXBm9vyZE2SxhTi3wk=",
+    "ecc_private_key_encrypted": "khM8WfJNHZPVGn2yrIuoDujPtIchDS2FkpkOZxUiq6RnHQPvN38ncrUfSfiqITSe6uarSqg/LovC6myAuRjo+yT/nmldrffZ1Kp39ogOu3+E4NkKqH4S0E6UMgRIc7vm8+Iplr7MmlIL19W5Fj/z8dB6qc1TX1Cs5fpApS87N3hubnUwJ/r4e/oFozWjkUbBxhi+zjdfRmPBKWMZ5EXurXXihaWzRg=="
   }
 ]
