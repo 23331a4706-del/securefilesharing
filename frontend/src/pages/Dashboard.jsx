@@ -485,12 +485,6 @@ export default function Dashboard() {
         };
 
         const types = {
-          EIP712Domain: [
-            { name: 'name', type: 'string' },
-            { name: 'version', type: 'string' },
-            { name: 'chainId', type: 'uint256' },
-            { name: 'verifyingContract', type: 'address' }
-          ],
           FileRegistration: [
             { name: 'action', type: 'string' },
             { name: 'fileId', type: 'uint256' },
@@ -518,23 +512,41 @@ export default function Dashboard() {
           timestamp: new Date().toLocaleTimeString()
         };
 
-        const typedData = JSON.stringify({
-          types,
-          domain,
-          primaryType: 'FileRegistration',
-          message
-        });
-
         console.log("Prompting MetaMask for rich FileRegistration EIP-712 metadata card...");
-        eip712Signature = await window.ethereum.request({
-          method: 'eth_signTypedData_v4',
-          params: [fromAddr, typedData]
-        });
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const signer = await provider.getSigner();
+
+        try {
+          eip712Signature = await signer.signTypedData(domain, types, message);
+        } catch (signerErr) {
+          if (signerErr.code === 'ACTION_REJECTED' || signerErr.code === 4001 || (signerErr.message && signerErr.message.toLowerCase().includes("rejected"))) {
+            throw signerErr;
+          }
+          const fullData = {
+            types: {
+              EIP712Domain: [
+                { name: 'name', type: 'string' },
+                { name: 'version', type: 'string' },
+                { name: 'chainId', type: 'uint256' },
+                { name: 'verifyingContract', type: 'address' }
+              ],
+              ...types
+            },
+            domain,
+            primaryType: 'FileRegistration',
+            message
+          };
+          eip712Signature = await window.ethereum.request({
+            method: 'eth_signTypedData_v4',
+            params: [fromAddr, JSON.stringify(fullData)]
+          });
+        }
+
         resultHash = eip712Signature;
         activityType = "File Registration Signature (EIP-712)";
         console.log("✓ MetaMask EIP-712 Signature Confirmed & Recorded:", eip712Signature);
       } catch (typedErr) {
-        if (typedErr.code === 4001 || (typedErr.message && typedErr.message.toLowerCase().includes("rejected"))) {
+        if (typedErr.code === 'ACTION_REJECTED' || typedErr.code === 4001 || (typedErr.message && typedErr.message.toLowerCase().includes("rejected"))) {
           throw typedErr;
         }
         console.warn("eth_signTypedData_v4 fallback notice:", typedErr);
