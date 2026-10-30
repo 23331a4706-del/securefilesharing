@@ -183,18 +183,18 @@
     "id": 1,
     "username": "alice_p9",
     "email": "alice_p9@example.com",
-    "password_hash": "$2b$12$3Z/cw56p9vxd49lzHjeTcO2PpqgZC0NEQxI8uj6.6NxDQ769Eu/gS",
+    "password_hash": "$2b$12$Us3AbWYhYugfpddECpT0tuJ.xG7NZifkT.V.hwPlFJsjClvqIyLja",
     "wallet_address": null,
-    "ecc_public_key": "BFJfzSO9Z4c1nuDkOeMvk9jj6VLQt/3/drhhHsSduy74T2YfWg4gviysdmTnVryr+Iw+j4vFp94csFAU2XlLqiA=",
-    "ecc_private_key_encrypted": "pAIk3BiiN1tGQU6i/n7NsUhCdSkXqDn2sNGia2fp/wS3QNZPrkyPTgbqPs5C+Cfd3dUS9+Z9KKOnQ6KWgd4NbwGYpHV4lbJMGEm8nVQRddg/PGv2yuQ7N+eR3eQoxB/qo7hOJHRcGko9oS0xvcIX7R0GjSltZMhW8YgupAdAq0v5xATgXC7VoM/WpZfpDia8D+poMa+EsJXtwh0vBVitfbiOeJJvnQ=="
+    "ecc_public_key": "BDjXCTxoJubbZ4Tar+4FDMqDYc6VhsyWHPO8lc+EWuodOGBiLgPITex8Xs3bfrXTahIOr5h4PnhGkBP5ODPPqHo=",
+    "ecc_private_key_encrypted": "iGFYqnILvBpo10IQT3tt/SIHqYGav2ogmmJ45LBdcX2HWI9lNUlPqct+Dgvpwec1q4372bLQuU0znEAz00Znhc2e/ecPhOi5iR3eSH5qnl1OQA+tD6A3v4CKLfncXG39Nido014BVpPcoEoa2EyVAI0YYv4j+DR5EBwt1Vc4o46MPAlSgG0dBRwfOq+TnF3K2b4jLlYXHl/omx6uKYdCpJIiU4zoPw=="
   },
   {
     "id": 2,
     "username": "bob_p9",
     "email": "bob_p9@example.com",
-    "password_hash": "$2b$12$rNE1c33PynPrnywSZE4DRuXYRVQedJywp2hsUDB6nZCKP6Uyyky/C",
+    "password_hash": "$2b$12$lXzoqCCRx7TGb807QHiaN.QbaqB1D5a.nj86cNdemHJ5vK1YRYRSm",
     "wallet_address": null,
-    "ecc_public_key": "BLSvvwilmaU3bO55UMvy54iY5Jak0vUyrLPCvWQ6XSAWNYAFxSeTxbCpfKrLdhNfxv54hQyRd8OrCGDzVIAbYbY=",
-    "ecc_private_key_encrypted": "rY+7iQBUESs4sdZl7cdEsAtziTkUWumTVklNj2PnRcqw7eG1i0obw6X93abjX6imR3ejdO95y63nLMiPrugYX2cO2OKTNs4fhZ81FMSkPfHjdDUqazK+aA7zczOz4Go36Q58TVe7TVUdn8VNxqBfT9tY3fD+kL/cedR195ZKbfNrdjRwDtAjqm3QZqLCo00kjzyu2DtYaRW5MCo4w0WIIe3n5Z8Rsg=="
+    "ecc_public_key": "BHlMtrQ33Mi1CMjBtyOiSocND0KOzLeVftUeVjnOadZuVa0qp4NbRx0UGHv9gBB0XJpWDC89TOUGCc/N8a0BcCc=",
+    "ecc_private_key_encrypted": "di5poF7lcDY+AkBLCVZv4/SGtYyrXIxPOlqTHD0btDhFor70BS6UDsPI8/oL7iUHPeMzTYSZDcrU9Ny3RIqpkMUDXGe56hXkqJSPp56P7+AefLWQr7VAZiuuQ8zmsy5vNpbh+La0mtKt2binYBRQqlwKeBIcCV6IV53zsrR8m2LET+2xhWXlApmop7S3uw9WLpPO4s0E6QGL9Ij4eN9XjrQLROXA+Q=="
   }
 ]
